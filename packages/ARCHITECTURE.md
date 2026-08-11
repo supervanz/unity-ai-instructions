@@ -81,7 +81,22 @@
 - 패키지의 `package.json`에 적힌 `unity` 최소 버전이 실제 사용 중인 에디터 버전과 다를 수 있다 — 요청받지 않았다면 임의로 정리하지 말 것(범위를 벗어나는 작업).
 - 패키지 저장소는 모두 **private**로 만드는 것을 기본으로 한다(별도 지시가 없으면 보수적으로 선택).
 
-## 7. 다른 Claude 세션/계정에서 이어서 작업할 때
+## 7. 관련 저장소 — AI 작업 규칙 통합 시스템
+
+이 문서가 다루는 "공유 UPM 패키지" 시스템과는 별개로, `AGENTS.md` 템플릿과 `.unity-kb` harness 지침 문서 자체도 git으로 중앙 관리한다:
+
+- 저장소: `https://github.com/supervanz/unity-ai-instructions.git` (private)
+- 담고 있는 것: `AGENTS.md` 원본 템플릿, `.unity-kb/articles/integrated-ai-harness-instructions.md` 원본, 이 문서(`ARCHITECTURE.md`)의 사본
+- 어떤 프로젝트든 아래 한 줄로 규칙을 받아올 수 있다:
+  ```bash
+  git clone https://github.com/supervanz/unity-ai-instructions.git .unity-kb
+  cp .unity-kb/AGENTS.md ./AGENTS.md
+  ```
+- 이렇게 하면 프로젝트의 `.unity-kb` 폴더 자체가 이 저장소의 독립 git 체크아웃이 되어, 이후엔 그 폴더 안에서 `git pull`만 하면 최신 규칙을 받는다.
+- 규칙을 고칠 때는 각 프로젝트의 로컬 사본이 아니라 **이 저장소를 고치고 push**한 뒤, 각 프로젝트에서 pull/재복사한다(자세한 동기화 원칙은 그 저장소의 `README.md` 참고).
+- 이 두 시스템(패키지 저장소들 / unity-ai-instructions)은 서로 독립적이지만 같은 원칙(git 저장소 기반, `supervanz` 계정, 태그/버전으로 상태 고정)을 공유한다.
+
+## 8. 다른 Claude 세션/계정에서 이어서 작업할 때
 
 - 새 프로젝트에서 이 시스템을 쓰려면: 이 문서를 읽고 → 필요한 패키지를 4번 항목 방식으로 `manifest.json`에 추가 → 그 프로젝트에도 `AGENTS.md`가 없으면 `unity-ai-instructions` 저장소의 템플릿으로 만들어준다(자세한 건 `unity-ai-instructions` 저장소의 README 참고).
 - 다른 GitHub 계정으로 관리하고 싶다면, 이미 push된 저장소를 그대로 두고 새 계정 아래로 fork/transfer하거나, 이 문서와 각 프로젝트 `AGENTS.md`의 URL을 일괄 교체하면 됨 — 구조 자체는 계정에 종속되지 않음.
