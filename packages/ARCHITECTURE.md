@@ -33,6 +33,7 @@
 | `com.custom.snowglobe` | `D:\UnityCustomPackage\com.custom.snowglobe` | `https://github.com/supervanz/com.custom.snowglobe.git` | GPU 기반 SPH 유체 파티클 시뮬레이션, 모바일 터치/자이로 흔들기 인터랙션, specularity. 유리구/밀폐 용기 안 파티클 연출에 사용 |
 | `com.custom.planar-reflection` | `D:\UnityCustomPackage\com.custom.planar-reflection` | `https://github.com/supervanz/com.custom.planar-reflection.git` | 평면 반사(planar reflection) 컴포넌트, URP 평면 반사 셰이더, 샘플 머티리얼. 바닥/거울면 반사 연출에 사용 |
 | `com.custom.volumetricfog` | `D:\UnityCustomPackage\com.custom.volumetricfog` | `https://github.com/supervanz/com.custom.volumetricfog.git` | URP Render Graph 기반 볼류메트릭 안개 이펙트 |
+| `com.generic.crowd` | `D:\UnityCustomPackage\com.generic.crowd` | `https://github.com/supervanz/com.generic.crowd.git` | NavMeshAgent 기반 경량 NPC 배회/모션 오버라이드 시스템. 군중/배경 캐릭터 연출에 사용 |
 
 각 패키지 폴더는 표준 UPM 구조(`package.json`, `Runtime/`, 필요시 `Samples~/`)를 따른다. `com.custom.snowglobe`가 가장 완성된 예시(스크립트/셰이더/데모 씬 포함)이며, 새 패키지를 만들 때 이 구조를 그대로 템플릿으로 따르면 된다.
 
@@ -40,7 +41,7 @@
 
 이 시스템을 쓰는 모든 프로젝트의 `AGENTS.md`에는 "공유 패키지 재사용" 섹션이 있고, 위 표와 동일한 패키지 목록 및 아래 지침을 담고 있다(정확한 문구는 `unity-ai-instructions` 저장소의 `AGENTS.md` 템플릿이 원본):
 
-> 새로운 공용 시스템(파티클 이펙트, 프리팹, 공용 스크립트 등)이 필요한 작업을 시작하기 전에 목록을 확인한다. 이미 있는 패키지로 요구사항을 충족할 수 있으면 새로 만들지 말고 해당 프로젝트의 `Packages/manifest.json`에 git URL로 추가해서 사용한다. 목록에 없는 새 공용 시스템을 패키지로 만들었다면, 작업 완료 보고 시 사용자에게 이 목록에 등록해달라고 요청한다(AI가 이 목록을 직접 수정하지는 않음).
+> 새로운 공용 시스템(파티클 이펙트, 프리팹, 공용 스크립트 등)이 필요한 작업을 시작하기 전에 목록을 확인한다. 이미 있는 패키지로 요구사항을 충족할 수 있으면 새로 만들지 말고 해당 프로젝트의 `Packages/manifest.json`에 git URL로 추가해서 사용한다. 목록에 없는 새 공용 시스템을 패키지로 만들지 여부는 사용자가 직접 지시하거나 승인한 경우에만 진행한다 — 이 판단은 AI가 임의로 하지 않는다. 사용자 승인을 받아 패키지를 만들고 GitHub push까지 마쳤다면, 그 결과를 이 목록(및 `unity-ai-instructions` 저장소의 이 템플릿)에 등록하는 것은 AI가 직접 해도 된다 — 이미 승인된 결정을 표에 반영하는 기계적 작업이기 때문이다.
 
 **이 문서(ARCHITECTURE.md)와 AGENTS.md의 역할 분리**: AGENTS.md는 각 프로젝트에서 AI 에이전트가 매번 자동으로 읽는 "실행용 지침 + 현재 패키지 목록"이고, 이 문서는 "왜 이렇게 만들어졌는지"에 대한 배경 설명이다. 패키지 목록이 갱신되면 AGENTS.md(및 `unity-ai-instructions` 저장소의 템플릿)가 최신 상태를 반영하고, 이 문서는 그대로 두어도 된다(다만 새 패키지 추가 절차나 구조 자체가 바뀌면 이 문서도 갱신 필요).
 
@@ -100,4 +101,4 @@
 
 - 새 프로젝트에서 이 시스템을 쓰려면: 이 문서를 읽고 → 필요한 패키지를 4번 항목 방식으로 `manifest.json`에 추가 → 그 프로젝트에도 `AGENTS.md`가 없으면 `unity-ai-instructions` 저장소의 템플릿으로 만들어준다(자세한 건 `unity-ai-instructions` 저장소의 README 참고).
 - 다른 GitHub 계정으로 관리하고 싶다면, 이미 push된 저장소를 그대로 두고 새 계정 아래로 fork/transfer하거나, 이 문서와 각 프로젝트 `AGENTS.md`의 URL을 일괄 교체하면 됨 — 구조 자체는 계정에 종속되지 않음.
-- 패키지 목록은 사람이 직접 관리하는 것을 원칙으로 한다(AI가 새 패키지를 추출했을 때는 사용자에게 "목록에 등록해달라"고 요청하고, 목록 파일 자체를 임의로 고치지 않는다).
+- 새 패키지를 만들지 여부는 사람이 직접 판단/지시한다(AI가 임의로 새 공유 패키지를 만들지는 않는다). 다만 사용자가 승인해 만들고 GitHub push까지 완료한 패키지라면, 그 결과를 목록(ARCHITECTURE.md 3번 섹션 표, 각 프로젝트 AGENTS.md, unity-ai-instructions 템플릿)에 등록하는 것은 AI가 직접 해도 된다 — 이미 내려진 결정을 기계적으로 반영하는 작업이라 사람이 매번 개입할 필요는 없다.

@@ -25,7 +25,7 @@ If scope index files exist (`.unity-kb/articles/{private,projects/<id>,orgs/<id>
 
 (배경/취지/전체 구조는 `D:\UnityCustomPackage\ARCHITECTURE.md` 참고)
 
-새로운 공용 시스템(파티클 이펙트, 프리팹, 공용 스크립트 등)이 필요한 작업을 시작하기 전에 아래 "알려진 공유 패키지" 목록을 확인한다. 이미 있는 패키지로 요구사항을 충족할 수 있으면 새로 만들지 말고, 해당 프로젝트의 `Packages/manifest.json`에 git URL로 추가해서 사용한다. 목록에 없는 새 공용 시스템을 패키지로 만들었다면, 작업 완료 보고 시 사용자에게 이 목록에 등록해달라고 요청한다(AI가 이 목록을 직접 수정하지는 않음 — 짧은 목록이라 사용자가 직접 관리).
+새로운 공용 시스템(파티클 이펙트, 프리팹, 공용 스크립트 등)이 필요한 작업을 시작하기 전에 아래 "알려진 공유 패키지" 목록을 확인한다. 이미 있는 패키지로 요구사항을 충족할 수 있으면 새로 만들지 말고, 해당 프로젝트의 `Packages/manifest.json`에 git URL로 추가해서 사용한다. 목록에 없는 새 공용 시스템을 패키지로 만들지 여부는 사용자가 직접 지시하거나 승인한 경우에만 진행한다 — 이 판단은 AI가 임의로 하지 않는다. 사용자 승인을 받아 패키지를 만들고 GitHub push까지 마쳤다면, 그 결과를 이 목록(및 `D:\UnityCustomPackage\ARCHITECTURE.md`, `unity-ai-instructions` 저장소의 이 템플릿)에 등록하는 것은 AI가 직접 해도 된다 — 이미 승인된 결정을 표에 반영하는 기계적 작업이기 때문이다.
 
 **알려진 공유 패키지**
 
@@ -34,6 +34,7 @@ If scope index files exist (`.unity-kb/articles/{private,projects/<id>,orgs/<id>
 | com.custom.snowglobe | `https://github.com/supervanz/com.custom.snowglobe.git` | GPU 기반 SPH 유체 파티클 시뮬레이션, 모바일 터치/자이로 흔들기 인터랙션. 유리구/밀폐 용기 안 파티클 연출에 사용 |
 | com.custom.planar-reflection | `https://github.com/supervanz/com.custom.planar-reflection.git` | 평면 반사(planar reflection) 컴포넌트, URP 평면 반사 셰이더, 샘플 머티리얼. 바닥/거울면 반사 연출에 사용 |
 | com.custom.volumetricfog | `https://github.com/supervanz/com.custom.volumetricfog.git` | URP Render Graph 기반 볼류메트릭 안개 이펙트 |
+| com.generic.crowd | `https://github.com/supervanz/com.generic.crowd.git` | NavMeshAgent 기반 경량 NPC 배회/모션 오버라이드 시스템. 군중/배경 캐릭터 연출에 사용 |
 
 ## Safety
 
