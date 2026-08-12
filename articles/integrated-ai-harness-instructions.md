@@ -2,7 +2,11 @@
 id: integrated-ai-harness-instructions
 title: 통합 AI 하네스 지침
 version: 3
+status: deprecated
+superseded-by: AGENTS.md (id: unity-ai-agent-instructions)
 ---
+
+> **DEPRECATED**: 이 문서의 내용은 저장소 루트의 `AGENTS.md`(1~4장, 7장)에 그대로 흡수되었다. `AGENTS.md`가 별도 파일을 거치지 않고 프로젝트에 직접 배치되는 유일한 원본이며, 이 문서는 이력 참고용으로만 남겨둔다. 새로 수정할 내용이 있으면 이 문서가 아니라 `AGENTS.md`를 고친다.
 
 # 통합 AI 하네스 지침 (Integrated AI Harness System Instructions)
 
