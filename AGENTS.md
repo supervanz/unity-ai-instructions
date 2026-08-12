@@ -36,6 +36,10 @@ If scope index files exist (`.unity-kb/articles/{private,projects/<id>,orgs/<id>
 | com.custom.volumetricfog | `https://github.com/supervanz/com.custom.volumetricfog.git` | URP Render Graph 기반 볼류메트릭 안개 이펙트 |
 | com.generic.crowd | `https://github.com/supervanz/com.generic.crowd.git` | NavMeshAgent 기반 경량 NPC 배회/모션 오버라이드 시스템. 군중/배경 캐릭터 연출에 사용 |
 
+## Unity 공식 AI skills
+
+`Unity-Technologies/skills`(Unity 공식 Claude Code Skill 모음)를 `unity-ai-instructions` 저장소의 `vendor/unity-technologies-skills/skills/`에 벤더링해 두었다. 이 프로젝트의 `.claude/skills/`에 필요한 스킬 폴더가 설치되어 있으면 `/스킬이름`으로 직접 호출한다(예: `unity-package-management`, `unity-cli`, `new-unity-project`, `ui`, `ui-uitk`, `ui-ugui`, `ui-imgui`, `build-live-game`, `implement-in-app-purchases`, `levelplay-unity-integration`). 설치/갱신 절차는 `unity-ai-instructions` 저장소의 `README.md` 참고.
+
 ## Safety
 
 - Use dry-run and confirmation parameters when exposed by destructive Pipeline commands.

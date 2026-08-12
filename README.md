@@ -19,8 +19,11 @@ unity-ai-instructions/
 ├── AGENTS.md                                    # 각 프로젝트 루트 AGENTS.md의 원본 템플릿
 ├── articles/
 │   └── integrated-ai-harness-instructions.md    # AI 행동 제어 하네스 지침 (.unity-kb/articles/ 원본)
-└── packages/
-    └── ARCHITECTURE.md                          # 공유 UPM 패키지 시스템 배경 문서
+├── packages/
+│   └── ARCHITECTURE.md                          # 공유 UPM 패키지 시스템 배경 문서
+└── vendor/
+    └── unity-technologies-skills/               # Unity-Technologies/skills 저장소를 git subtree로 벤더링한 사본
+        └── skills/<skill-name>/SKILL.md         # 각 스킬 (Claude Code Skill 포맷과 동일한 SKILL.md)
 ```
 
 ## 이 저장소를 프로젝트에 반영하는 방법
@@ -40,6 +43,32 @@ cp .unity-kb/AGENTS.md ./AGENTS.md
 
 새 시스템(공유 패키지 등)이 추가되면 `AGENTS.md`의 "알려진 공유 패키지" 표에 항목을 추가하고, 이 저장소에 commit/push한 뒤 각 프로젝트에 반영한다.
 
+## Unity 공식 AI skills (`Unity-Technologies/skills` 벤더링)
+
+`https://github.com/Unity-Technologies/skills` — Unity가 공식 배포하는 Claude Code 호환 Skill(`SKILL.md`) 모음. `unity-package-management`, `unity-cli`, `new-unity-project`, `ui`/`ui-uitk`/`ui-ugui`/`ui-imgui`, `build-live-game`, `implement-in-app-purchases`, `levelplay-unity-integration` 등 10개 스킬을 포함한다.
+
+이 저장소의 원본 대신 **git subtree**로 `vendor/unity-technologies-skills/`에 통째로 들여왔다(참고 문서가 아니라 실제로 프로젝트에 설치해서 `/스킬이름`으로 바로 호출하는 실행 가능한 Skill로 쓰기 위함).
+
+**프로젝트에 설치하는 방법** (원하는 스킬만 골라서 프로젝트의 `.claude/skills/`로 복사):
+
+```bash
+# 프로젝트 루트에서, .unity-kb가 이미 이 저장소의 체크아웃이라고 가정
+mkdir -p .claude/skills
+cp -r .unity-kb/vendor/unity-technologies-skills/skills/unity-package-management .claude/skills/
+cp -r .unity-kb/vendor/unity-technologies-skills/skills/unity-cli .claude/skills/
+# 필요한 스킬 폴더만 반복해서 복사, 또는 skills/ 전체를 통째로 복사
+```
+
+**원본이 업데이트됐을 때 반영하는 방법** (이 저장소를 고치는 사람만 실행):
+
+```bash
+git subtree pull --prefix=vendor/unity-technologies-skills https://github.com/Unity-Technologies/skills.git main --squash
+git push origin master
+```
+
+그 뒤 각 프로젝트는 `.claude/skills/`에 복사해둔 스킬 폴더를 다시 덮어써서 최신화한다.
+
 ## 이력
 
 - 초기 통합: 여러 프로젝트에 개별적으로 존재하던 `AGENTS.md`/`.unity-kb` 지침을 이 저장소로 통합. 이전에 `.unity-kb/.kb-sync`를 관리하던 외부 동기화 도구는 더 이상 쓰이지 않는 것으로 확인되어 git으로 완전히 대체.
+- `Unity-Technologies/skills`를 `vendor/unity-technologies-skills/`에 git subtree로 벤더링. 공유 UPM 패키지 시스템(런타임 코드/에셋 재사용)과는 별개로, "AI 에이전트의 작업 절차/워크플로 재사용"을 위한 시스템.
