@@ -1,8 +1,8 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 1
-supersedes: AGENTS.md(이전 버전), articles/integrated-ai-harness-instructions.md(v3)
+version: 2
+supersedes: AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
 # Unity AI 에이전트 작업 지침
@@ -11,9 +11,11 @@ supersedes: AGENTS.md(이전 버전), articles/integrated-ai-harness-instruction
 
 이 문서(및 이 저장소 전체)의 원본은 `https://github.com/supervanz/unity-ai-instructions.git`이다. 이 저장소를 프로젝트에 반영/동기화하는 방법은 `.unity-kb/README.md`(또는 이 저장소의 `README.md`)를 참고한다.
 
+**v2 변경**: 도메인별 세부 절차(3D 에셋 생성, 공유 패키지, Unity skills, KB 문서 관리)를 `agents-reference/` 아래 별도 파일로 분리했다. 이 문서(§0~4)는 모든 작업에 항상 적용되는 행동 규칙만 담고, 매 작업마다 전체를 다시 읽어도 비용이 크지 않도록 짧게 유지한다. 도메인 절차가 필요한 작업일 때만 §5의 표를 보고 해당 참고 문서를 그때 읽는다.
+
 ## 0. 문서 우선순위
 
-이 문서 내에서 **앞쪽 장이 뒤쪽 장보다 우선**한다: 1~4장(안전/우회금지, 실행·검증 루프, 자체 감사, 응답 형식)은 행동 제어 규칙이고, 5장 이후(공유 패키지, Unity 공식 skills, 문서 관리)는 그 규칙 아래에서 적용되는 도메인별 세부 절차다. 두 내용이 충돌하면 앞쪽 장을 따른다.
+이 문서 내에서 **앞쪽 장이 뒤쪽 장보다 우선**한다: 1~4장(안전/우회금지, 실행·검증 루프, 자체 감사, 응답 형식)은 모든 작업에 적용되는 행동 제어 규칙이다. §5에서 가리키는 참고 문서들은 그 규칙 아래에서 적용되는 도메인별 세부 절차이며, 해당 도메인 작업일 때만 로드한다. 두 내용이 충돌하면 이 문서(§0~4)를 따른다.
 
 ## 1. 우회 작업 금지 및 승인 게이트 (No-Detour & Approval Gate)
 
@@ -75,32 +77,8 @@ supersedes: AGENTS.md(이전 버전), articles/integrated-ai-harness-instruction
 - 컴파일 실패, 콘솔 에러, 스크린샷 실패, 예상과 다른 시각적 결과는 성공으로 포장하지 않고 있는 그대로 보고한다.
 
 ### 2.4 결과 검증 - 3D 에셋 생성 (도메인 세부 절차)
-
-#### 2.4.0 적용 대상 판단 (프리미티브 vs 3D 생성 모델)
-- 구조/건축 요소(마루, 천장, 벽, 기둥 등 평면·직육면체·단순 형태로 근사 가능한 오브젝트)는 프리미티브(Cube, Plane, Cylinder 등)로 배치 가능.
-- 유기적 형태/캐릭터/장식 조형물(나무, 사람, 동물, 조각상 등 프리미티브 조합으로 실루엣·디테일을 원본 의도대로 표현할 수 없는 오브젝트)는 반드시 3D 생성 모델(2.4.2 파이프라인)을 거쳐야 함. 프리미티브 조합으로 임의 대체 금지.
-- 판단 기준: 해당 오브젝트의 실루엣/디테일을 프리미티브 조합으로 원본 의도 훼손 없이 표현 가능한지 여부. 애매한 경우 진행 전 사용자에게 확인.
-- 이 기준을 우회할 목적으로 프리미티브로 먼저 배치한 뒤 "임시"임을 밝히지 않고 완성된 결과물처럼 보고하는 행위는 1.2(임의 대체 금지) 위반으로 간주.
-
-#### 2.4.1 원칙
-- 복잡한 원본 이미지에서 대상을 직접 크롭하여 3D 입력값으로 사용 금지(경계면 잡영, 하반신 누락, 부유물 구워짐 유발).
-- 전신 형태 완전성 제약: Full body, head-to-toe, standing pose, complete legs and feet, isolated transparent background 명시.
-- 상반신만 생성되거나 하반신 누락 시 품질 미달로 판정, 씬 배치 중단.
-
-#### 2.4.2 파이프라인
-0. 입력 이미지 사전 판단: 레퍼런스 이미지가 이미 배경과 분리된 단일 피사체의 깨끗한 전신 이미지라면 1~2단계를 건너뛰고 3단계로 직행. 배경과 인물이 겹쳐 있거나 뒤섞인 복합 이미지일 때만 1~2단계 필수.
-1. 대상 분석 및 프롬프트화: 성별, 의상, 외형, 색상 스타일 추출. 배경/장식물/무관 요소 제외.
-2. 투명 배경 2D 전신 이미지 생성: Full body portrait, head to toe, front view, standing pose, clean isolated transparent background, game asset style. 절단 없이 온전한지 확인.
-3. Image-to-3D Mesh 변환: (0단계에서 재사용 판정된 이미지 또는 2단계 결과물을) 레퍼런스로 Image-to-3D 실행(waitForCompletion=true).
-4. 메시 품질 검증(배치 전 필수):
-   - 사지 누락 여부(Bounds Y-Extent, 하단 절단면 확인)
-   - 아티팩트 합성 여부(배경/장식물 구워짐 확인)
-   - 접지 및 포즈 상태(발끝 정방향 지면 배치 가능 여부)
-
-#### 2.4.3 씬 배치 후 검증
-- 결과물이 벽/다른 오브젝트에 가려지지 않고 명확히 보이는 각도를 최소 1개 이상 찾아 스크린샷 캡처 후 검증.
-- 정면/측면/조감도는 참고용 기본값일 뿐 고정 필수값이 아님 — 씬 구조상 특정 각도가 가려진다면 생략하고, 결과를 실제로 판별 가능한 각도를 우선.
-- 검증 목적은 "여러 각도를 찍었는가"가 아니라 "찍은 스크린샷으로 결과물의 정상 여부를 실제로 판단할 수 있는가"임.
+- 3D 모델을 새로 생성하거나 씬에 배치하는 작업일 때만 [agents-reference/3d-asset-pipeline.md](agents-reference/3d-asset-pipeline.md)를 읽고 그 절차를 따른다.
+- 프리미티브만으로 구조 요소를 배치하는 작업, 또는 이미 있는 에셋/패키지를 붙이는 작업에는 이 참고 문서가 필요 없다.
 
 ### 2.5 직접 씬 작성 지침 (Direct Scene Creation)
 
@@ -156,39 +134,15 @@ supersedes: AGENTS.md(이전 버전), articles/integrated-ai-harness-instruction
 - 서론 없이 본론 즉시 진입.
 - 핵심 정보, 작업 항목, 수정 코드는 불릿 리스트로 작성.
 
-## 5. 공유 패키지 재사용
+## 5. 참고 문서 (필요할 때만 로드)
 
-(배경/취지/전체 구조는 `packages/ARCHITECTURE.md`, 로컬 사본은 `D:\UnityCustomPackage\ARCHITECTURE.md` 참고)
+아래 표에 해당하는 작업일 때만 그 참고 문서를 읽는다. 해당하지 않는 작업이면 이 표만 보고 넘어가면 된다 — 참고 문서 본문을 컨텍스트에 올리지 않는다.
 
-새로운 공용 시스템(파티클 이펙트, 프리팹, 공용 스크립트 등)이 필요한 작업을 시작하기 전에 아래 "알려진 공유 패키지" 목록을 확인한다. 이미 있는 패키지로 요구사항을 충족할 수 있으면 새로 만들지 말고, 해당 프로젝트의 `Packages/manifest.json`에 git URL로 추가해서 사용한다. 목록에 없는 새 공용 시스템을 패키지로 만들지 여부는 사용자가 직접 지시하거나 승인한 경우에만 진행한다 — 이 판단은 AI가 임의로 하지 않는다. 사용자 승인을 받아 패키지를 만들고 GitHub push까지 마쳤다면, 그 결과를 이 목록(및 `D:\UnityCustomPackage\ARCHITECTURE.md`, `unity-ai-instructions` 저장소의 이 템플릿)에 등록하는 것은 AI가 직접 해도 된다 — 이미 승인된 결정을 표에 반영하는 기계적 작업이기 때문이다.
+| 참고 문서 | 로드 조건 |
+|---|---|
+| [agents-reference/3d-asset-pipeline.md](agents-reference/3d-asset-pipeline.md) | 3D 모델을 새로 생성하거나 씬에 배치하는 작업 |
+| [agents-reference/shared-packages.md](agents-reference/shared-packages.md) | 새로운 공용 시스템(파티클, 프리팹, 공용 스크립트 등)이 필요해서 기존 공유 패키지로 충족 가능한지 확인해야 하는 작업 |
+| [agents-reference/unity-skills.md](agents-reference/unity-skills.md) | 패키지 관리, UI, 빌드/배포, IAP, LevelPlay 연동, 신규 프로젝트 초기화 등 Unity 공식 skill 영역의 작업 |
+| [agents-reference/kb-management.md](agents-reference/kb-management.md) | `.unity-kb/`에 문서를 추가/수정/삭제하는 작업 |
 
-**알려진 공유 패키지**
-
-| 패키지 | 저장소 | 설명 |
-|---|---|---|
-| com.custom.snowglobe | `https://github.com/supervanz/com.custom.snowglobe.git` | GPU 기반 SPH 유체 파티클 시뮬레이션, 모바일 터치/자이로 흔들기 인터랙션. 유리구/밀폐 용기 안 파티클 연출에 사용 |
-| com.custom.planar-reflection | `https://github.com/supervanz/com.custom.planar-reflection.git` | 평면 반사(planar reflection) 컴포넌트, URP 평면 반사 셰이더, 샘플 머티리얼. 바닥/거울면 반사 연출에 사용 |
-| com.custom.volumetricfog | `https://github.com/supervanz/com.custom.volumetricfog.git` | URP Render Graph 기반 볼류메트릭 안개 이펙트 |
-| com.generic.crowd | `https://github.com/supervanz/com.generic.crowd.git` | NavMeshAgent 기반 경량 NPC 배회/모션 오버라이드 시스템. 군중/배경 캐릭터 연출에 사용 |
-
-## 6. Unity 공식 AI skills
-
-`Unity-Technologies/skills`(Unity 공식 Claude Code Skill 모음)를 이 저장소의 `vendor/unity-technologies-skills/skills/`에 벤더링해 두었다. 프로젝트의 `.claude/skills/`에 필요한 스킬 폴더가 설치되어 있으면 `/스킬이름`으로 직접 호출한다(예: `unity-package-management`, `unity-cli`, `new-unity-project`, `ui`, `ui-uitk`, `ui-ugui`, `ui-imgui`, `build-live-game`, `implement-in-app-purchases`, `levelplay-unity-integration`). 설치/갱신 절차는 이 저장소의 `README.md` 참고.
-
-## 7. 문서 관리 (Knowledge Base Registration)
-
-### 7.1 포맷 및 위치
-- 포맷: .md
-- 위치:
-  - 개인용: `.unity-kb/articles/private/`
-  - 프로젝트 공유용: `.unity-kb/articles/projects/<project_id>/`
-  - 조직 공유용: `.unity-kb/articles/orgs/<org_id>/`
-
-### 7.2 YAML Front-matter
-- 모든 문서 상단에 id, title, version 포함.
-
-### 7.3 색인 등록
-- 해당 Scope 루트의 index.md에 상대 경로, 제목, 한 줄 설명 추가.
-
-### 7.4 관리 주체
-- KB 문서(이 문서, 하네스 문서, 패키지/skills 목록 등) 추가/수정/삭제는 사용자가 직접 수행하거나 승인한 것만 반영한다. AI는 5장 규칙(사용자 승인을 받은 패키지 등록)처럼 명시적으로 허용된 범위 밖에서는 KB 문서를 임의로 고치지 않는다.
+각 참고 문서는 [AGENTS.md](AGENTS.md) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차이며, 충돌 시 이 문서(§0~4)가 우선한다.
