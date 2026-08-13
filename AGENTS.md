@@ -1,8 +1,8 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 2
-supersedes: AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
+version: 3
+supersedes: AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
 # Unity AI 에이전트 작업 지침
@@ -12,6 +12,8 @@ supersedes: AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 이 문서(및 이 저장소 전체)의 원본은 `https://github.com/supervanz/unity-ai-instructions.git`이다. 이 저장소를 프로젝트에 반영/동기화하는 방법은 `.unity-kb/README.md`(또는 이 저장소의 `README.md`)를 참고한다.
 
 **v2 변경**: 도메인별 세부 절차(3D 에셋 생성, 공유 패키지, Unity skills, KB 문서 관리)를 `agents-reference/` 아래 별도 파일로 분리했다. 이 문서(§0~4)는 모든 작업에 항상 적용되는 행동 규칙만 담고, 매 작업마다 전체를 다시 읽어도 비용이 크지 않도록 짧게 유지한다. 도메인 절차가 필요한 작업일 때만 §5의 표를 보고 해당 참고 문서를 그때 읽는다.
+
+**v3 변경**: §2.0의 CLI 강제 범위를 좁혔다. Unity CLI/Pipeline은 이 프로젝트에 새로 도입된 자동화 대상(살아있는 Editor 프로세스의 상태를 읽거나 바꾸는 작업)에만 강제하고, 디스크의 정적 파일만으로 답이 되는 조회(패키지 소스/README, 문서, git 이력, 설정 파일 내용)는 셸/파일 도구를 그대로 쓰도록 허용했다. 모든 Unity 관련 조회를 CLI로 강제하던 이전 범위가 불필요하게 호출 횟수를 늘려 토큰을 소모시킨다는 점이 실측으로 확인됨.
 
 ## 0. 문서 우선순위
 
@@ -57,7 +59,9 @@ supersedes: AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ## 2. 실행 및 검증 루프 (Execution & Verification Loop)
 
 ### 2.0 Unity Editor 상호작용 준비
-- Unity Editor 조작은 Unity CLI/Pipeline 명령으로만 수행한다. 관련 없는 자동화로 live Editor 상태를 건드리지 않는다.
+- CLI/Pipeline 강제 대상: 살아있는 Editor 프로세스의 상태를 읽거나 바꾸는 작업 — 씬/GameObject/컴포넌트 조작, 콘솔 로그 조회, 컴파일·도메인 리로드, 플레이모드, 빌드, 스크린샷 등. 이 범위는 셸로 우회하지 않고 `unity command ...`만 사용한다.
+- CLI 강제 제외: 디스크의 정적 파일만 읽어서 답할 수 있는 작업(패키지 소스/README, 프로젝트 문서, git 이력, manifest.json 등 설정 파일)은 셸/파일 도구를 그대로 쓴다. live Editor 프로세스와 무관한 조회이므로 CLI를 거칠 필요가 없다.
+- 판단 기준: "지금 이 순간 Editor가 메모리에 들고 있는 상태"가 답이면 CLI, "디스크에 고정된 내용"으로 충분하면 파일 도구. 애매한 경우(예: Library의 캐시 스냅샷 파일)엔 파일을 읽어도 되지만, 그 값이 live 상태와 다를 수 있다는 점을 보고에 명시한다.
 - Editor 작업을 시작하기 전 `unity command`를 실행해 연결된 Pipeline 버전이 제공하는 명령을 확인한다.
 - 그다음 `unity command editor_status`를 실행하고, 결과가 `status: ready`일 때만 진행한다.
 - 호스트 Unity 프로세스를 조사할 권한으로 `unity command ...`를 실행한다 — 샌드박스된 프로세스 탐색이 살아있는 Pipeline descriptor를 stale로 잘못 분류해 제거하고 서버가 unreachable한 것처럼 보이게 할 수 있다.
