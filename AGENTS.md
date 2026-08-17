@@ -1,8 +1,8 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 4
-supersedes: AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
+version: 5
+supersedes: AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
 # Unity AI 에이전트 작업 지침
@@ -16,6 +16,8 @@ supersedes: AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-
 **v3 변경**: §2.0의 CLI 강제 범위를 좁혔다. Unity CLI/Pipeline은 이 프로젝트에 새로 도입된 자동화 대상(살아있는 Editor 프로세스의 상태를 읽거나 바꾸는 작업)에만 강제하고, 디스크의 정적 파일만으로 답이 되는 조회(패키지 소스/README, 문서, git 이력, 설정 파일 내용)는 셸/파일 도구를 그대로 쓰도록 허용했다. 모든 Unity 관련 조회를 CLI로 강제하던 이전 범위가 불필요하게 호출 횟수를 늘려 토큰을 소모시킨다는 점이 실측으로 확인됨.
 
 **v4 변경**: §5에 "전수 확인 원칙"을 추가했다. 실제 사례에서 요청("스노우글로브 생성")이 §5 표의 두 행(3d-asset-pipeline, shared-packages)에 동시에 해당했으나, 첫 매칭(3d-asset-pipeline) 이후 나머지 행 확인 없이 진행하여 이미 등록된 공유 패키지(`com.custom.snowglobe`)를 두고 프리미티브로 새로 제작하는 결과가 발생함. 조건 문구 비교는 이미 로드된 표 텍스트만으로 이뤄지므로 토큰 비용 증가 없이, 문서 본문을 실제로 여는 시점(조건 매칭 후)의 판단 정확도만 높인다.
+
+**v5 변경**: AI 생성 서비스 실호출로 확인된 14건 중, 도메인과 무관하게 항상 적용되는 5건만 본문에 넣고(§1.3, §2.0, §3.2) 생성 고유 절차는 `agents-reference/ai-generation.md`로 분리해 §5에 등재했다. 전부 본문에 넣으면 +8~10 KB로 v2의 분리 취지를 되돌린다. 추가된 5건은 모두 실제 실패에서 나왔으며 근거는 분리 문서에 있다.
 
 ## 0. 문서 우선순위
 
@@ -44,6 +46,7 @@ supersedes: AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-
 - 재시도 동일성 판단 기준: 동일 파일 + 동일 함수/API 호출 + 동일 에러 유형(스택트레이스 최상위 프레임 기준) 일치 시 "동일 문제"로 간주.
 - 동일 문제 해결 시도는 최대 2회까지 허용.
 - 2회 초과 시, 또는 우회 방식 도입이 필요하다고 판단되는 즉시 작업 중단(HALT).
+- **예외(재시도 0회)**: 외부 프로바이더 오류, 쿼터·과금 한도, 인증 실패 등 호출자가 해결할 수 없는 원인은 재시도·우회 대상이 아니다. 즉시 1.4 서식으로 보고하고 정지한다.
 
 ### 1.4 장애 보고 서식
 작업 중단 시 아래 서식으로 즉시 보고:
@@ -69,6 +72,8 @@ supersedes: AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-
 - 호스트 Unity 프로세스를 조사할 권한으로 `unity command ...`를 실행한다 — 샌드박스된 프로세스 탐색이 살아있는 Pipeline descriptor를 stale로 잘못 분류해 제거하고 서버가 unreachable한 것처럼 보이게 할 수 있다.
 - discovery가 실패하면 `unity pipeline list`를 확인한다. Pipeline 패키지가 설치된 실행 중인 프로젝트인데 PID/서버 포트/서버 연결이 없다면 대개 프로세스 검증 실패나 서버 시작 문제다.
 - 명령/파라미터를 임의로 가정하지 말고 discovery로 얻은 명령 목록에서 고른다.
+- `eval`/`eval_file`의 C#은 **메인 스레드에서 실행**된다. async 결과를 `.Wait()`/`.Result`로 기다리면 자기 데드락으로 Editor 전체가 정지한다. 시작만 시키고 `EditorApplication.update` 폴링 + `SessionState`로 회수한다.
+- eval은 컴파일 경고를 에러로 처리하며 `#pragma warning disable`이 통하지 않는다. deprecated API는 사용 불가이므로 대체 API나 다른 경로로 값을 얻는다.
 
 ### 2.1 사전 조사
 - 코드/에셋 수정 전 관련 스크립트, 파일 간 종속성, 프로젝트 설정(Input System, Render Pipeline 등) 확인.
@@ -114,6 +119,8 @@ supersedes: AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-
 ### 3.2 사실 확인
 - 보고 내용(실행 결과, 파일 수정 여부, 에러 해결 여부)을 실제 조회 도구(Console Log, File Reader, Scene Inspection)로 직접 대조.
 - 씬 작성 작업 포함 시 2.5.2 검증 절차(금지 항목 검사, 직접 반영 검사) 결과를 대조 항목에 포함.
+- 응답의 `success: false`가 무변경을 뜻하지 않는다. 실패로 보고된 작업이 대상 파일을 이미 수정했을 수 있으므로 실패 후에도 실제 상태(크기·타임스탬프·내용)를 확인한다.
+- 이미지·스크린샷을 **눈으로 보고 성공으로 판정하지 않는다.** 판정 기준값을 수치로 측정해 대조한다(예: 투명 배경은 알파 0 픽셀 비율).
 
 ### 3.3 불일치 대응
 - 감사 결과 보고 내용과 실제 상태 불일치 시(예: 수정 명시했으나 파일 미반영, 해결 명시했으나 콘솔 에러 잔존) 즉시 보고 중단, 원인 파악.
@@ -152,5 +159,6 @@ supersedes: AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-
 | [agents-reference/shared-packages.md](agents-reference/shared-packages.md) | 새로운 공용 시스템(파티클, 프리팹, 공용 스크립트 등)이 필요해서 기존 공유 패키지로 충족 가능한지 확인해야 하는 작업 |
 | [agents-reference/unity-skills.md](agents-reference/unity-skills.md) | 패키지 관리, UI, 빌드/배포, IAP, LevelPlay 연동, 신규 프로젝트 초기화 등 Unity 공식 skill 영역의 작업 |
 | [agents-reference/kb-management.md](agents-reference/kb-management.md) | `.unity-kb/`에 문서를 추가/수정/삭제하는 작업 |
+| [agents-reference/ai-generation.md](agents-reference/ai-generation.md) | AI 생성 서비스로 에셋(이미지·스프라이트·메시·머티리얼·사운드 등)을 생성하거나 편집하는 작업 |
 
 각 참고 문서는 [AGENTS.md](AGENTS.md) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차이며, 충돌 시 이 문서(§0~4)가 우선한다.

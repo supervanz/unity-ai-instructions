@@ -1,7 +1,7 @@
 ---
 id: unity-ai-agent-instructions-3d-asset-pipeline
 title: 3D 에셋 생성 검증 절차
-version: 2
+version: 3
 parent: AGENTS.md (2.4의 분리본)
 ---
 
@@ -12,6 +12,8 @@ parent: AGENTS.md (2.4의 분리본)
 이 문서는 [AGENTS.md](../AGENTS.md) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 AGENTS.md가 우선한다.
 
 **v2 변경**: §0(도구 및 파이프라인 수단 구분)을 추가했다. `Unity.GenerateSceneCodeFromImage`가 `unity command` CLI가 아닌 어시스턴트 도구 체계에 속한다는 점, 그리고 Texture2D 에셋 컨텍스트 경유 호출이 실패한다는 점을 구분하지 못해 생성과 조립을 섞어 시도하는 사례가 있었다.
+
+**v3 변경**: 파이프라인 각 단계에 **사전 조건**을 명시하고 2단계를 두 스텝(시트 생성 + 배경 제거)으로 분리했다. 실제 사례에서 2단계 시트를 3장 만든 뒤에야 3단계가 알파 채널을 강제한다는 사실과 배경 제거 프로바이더가 막혀 있다는 사실을 발견해, 만든 시트가 전부 사용 불가가 됐다. 3단계 산출물이 Prefab이라는 점, 리깅 등 후처리 커맨드가 존재한다는 점(5단계)도 함께 반영했다. 호출 메커니즘은 [ai-generation.md](ai-generation.md)로 분리했고 이 문서는 품질 기준·판단을 담당한다.
 
 ## 0. 도구 및 파이프라인 수단 구분 (필수)
 - **AI 어시스턴트 도구**: `Unity.GenerateSceneCodeFromImage`는 `unity command` CLI 명령어가 아닌 어시스턴트 도구 체계에 속함.
@@ -29,18 +31,27 @@ parent: AGENTS.md (2.4의 분리본)
 
 ## 원칙
 - 복잡한 원본 이미지에서 대상을 직접 크롭하여 3D 입력값으로 사용 금지(경계면 잡영, 하반신 누락, 부유물 구워짐 유발).
-- 전신 형태 완전성 제약: Full body, head-to-toe, standing pose, complete legs and feet, isolated transparent background 명시.
-- 상반신만 생성되거나 하반신 누락 시 품질 미달로 판정, 씬 배치 중단.
+- 전신 형태 완전성 제약: Full body, head-to-toe, standing pose, complete legs and feet 명시. 배경은 **투명이 아니라 순수 검정**을 요구하고(그림자·외곽선 문제가 함께 해결됨), 투명화는 별도 스텝에서 처리한다 — 구체적 프롬프트 문구는 [ai-generation.md](ai-generation.md) §7.
+- 상반신만 생성되거나 하반신 누락 시 품질 미달로 판정, 씬 배치 중단. 프레임 테두리에 사지가 닿아 잘린 경우도 동일하게 미달로 판정한다.
 
 ## 파이프라인
+
+각 단계의 **사전 조건**을 착수 전에 확인한다. 뒤 단계에서 막히면 앞 단계 산출물이 통째로 무용지물이 된다. 호출 방법·파라미터는 [ai-generation.md](ai-generation.md)를 따른다.
+
 0. 입력 이미지 사전 판단: 레퍼런스 이미지가 이미 배경과 분리된 단일 피사체의 깨끗한 전신 이미지라면 1~2단계를 건너뛰고 3단계로 직행. 배경과 인물이 겹쳐 있거나 뒤섞인 복합 이미지일 때만 1~2단계 필수.
 1. 대상 분석 및 프롬프트화: 성별, 의상, 외형, 색상 스타일 추출. 배경/장식물/무관 요소 제외.
-2. 투명 배경 2D 전신 이미지 생성: Full body portrait, head to toe, front view, standing pose, clean isolated transparent background, game asset style. 절단 없이 온전한지 확인.
-3. Image-to-3D Mesh 변환: (0단계에서 재사용 판정된 이미지 또는 2단계 결과물을) 레퍼런스로 Image-to-3D 실행(waitForCompletion=true).
+2. 2D 전신 시트 생성 — **두 스텝이다**:
+   - 2a. `GenerateSprite`로 전신 시트 생성. Full body, head to toe, front view, standing pose, 절단 없이 온전한지 확인.
+   - 2b. `RemoveImageBackground`로 배경 제거. **생성 프롬프트에 "transparent background"를 넣는 것으로는 대체되지 않는다** — 알파가 아니라 체커보드 무늬가 그려진다.
+   - **사전 조건**: 2b는 외부 프로바이더(Photoroom)에 고정되어 있다. 쿼터가 막혀 있으면 3단계로 진행할 수 없으므로, **시트를 만들기 전에 가용성을 먼저 확인한다.**
+3. Image-to-3D Mesh 변환: 2단계 결과물(또는 0단계에서 재사용 판정된 이미지)을 레퍼런스로 `GenerateMesh` 실행(waitForCompletion=true).
+   - **사전 조건**: 레퍼런스 이미지에 **실제 알파 채널이 있어야 한다.** 단색·검정 배경은 거부된다("must have a transparent background"). 알파 0 픽셀 비율로 사전 확인할 것.
+   - **산출물**: 원시 메시 파일이 아니라 **메시와 머티리얼이 포함된 self-contained Prefab**이다. `meshFormat`이 `glb`이면 `com.unity.cloud.gltfast`가 설치돼 있어야 임포트된다.
 4. 메시 품질 검증(배치 전 필수):
    - 사지 누락 여부(Bounds Y-Extent, 하단 절단면 확인)
    - 아티팩트 합성 여부(배경/장식물 구워짐 확인)
    - 접지 및 포즈 상태(발끝 정방향 지면 배치 가능 여부)
+5. 후처리(필요할 때만): `RigMesh`(리깅), `TextureMesh`(텍스처 추가), `RetopologyMesh`(토폴로지 개선). 생성 메시가 리깅되지 않았다는 이유로 포즈를 프리미티브·회전 근사로 대체하기 전에 이 단계를 먼저 검토한다.
 
 ## 씬 배치 후 검증
 - 결과물이 벽/다른 오브젝트에 가려지지 않고 명확히 보이는 각도를 최소 1개 이상 찾아 스크린샷 캡처 후 검증.
