@@ -1,7 +1,7 @@
 ---
 id: unity-ai-agent-instructions-ai-generation
 title: AI 생성 서비스 사용 절차
-version: 1
+version: 2
 parent: AGENTS.md (5의 표 등재)
 ---
 
@@ -12,6 +12,8 @@ parent: AGENTS.md (5의 표 등재)
 이 문서는 [AGENTS.md](../AGENTS.md) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 AGENTS.md가 우선한다.
 
 3D 모델의 **품질 기준과 프리미티브/생성 판단**은 [3d-asset-pipeline.md](3d-asset-pipeline.md)가 담당한다. 이 문서는 **호출 메커니즘**을 담당한다.
+
+**v2 변경**: Unity Assistant가 같은 파이프라인을 독립적으로 완주한 로그를 분석해 세 가지를 보강했다 — §9에 원본 덮어쓰기로 instance ID를 유지하는 수단, `meshFormat` 기본값이 fbx라는 실측, Assistant `RunCommand` 샌드박스가 `eval`보다 좁다는 점. 아울러 그 로그에서 프로바이더 실패를 자체 구현으로 메우고 보고에서 누락한 사례가 확인되어 §5에 명시적 금지를 추가했다.
 
 ## 1. 호출 경로
 
@@ -83,6 +85,8 @@ return "fired -> SessionState[" + key + "]";
 
 생성은 보통 20~40초, 메시는 그 이상 걸린다. 폴링은 백그라운드로 돌린다.
 
+**실행 샌드박스 차이**: Unity Assistant의 `RunCommand`는 `unity command eval`보다 제약이 크다 — `System.Reflection` 등 일부 네임스페이스를 아예 차단한다. 두 경로 모두 컴파일 경고를 에러로 처리하며 `#pragma warning disable`이 통하지 않는다.
+
 ## 2. 착수 전 사전 점검 (필수)
 
 생성을 시작하기 **전에** 아래를 확인한다. 뒤 단계에서 막히면 앞 단계 산출물이 통째로 무용지물이 된다.
@@ -113,7 +117,7 @@ GenerateTerrainLayer, AddPbrToTerrainLayer, RetopologyMesh, TextureMesh, RigMesh
 | `GenerateSprite` / `GenerateImage` | `modelId` 유효. 배경은 불투명하게 나온다 — 투명이 필요하면 별도 단계 필요 |
 | `RemoveImageBackground` | **`modelId`를 무시**하고 `photoroom-bg-removal`에 하드 라우팅. 모델 교체로 우회 불가 |
 | `EditImageWithPrompt` | **`savePath`를 무시**하고 `targetAssetPath`에 in-place로 덮어쓴다. 해상도도 바뀔 수 있다(1024→1008 실측). 실행 전 원본 백업 필수 |
-| `GenerateMesh` | 레퍼런스 이미지에 **실제 알파 채널을 강제**한다. 단색·검정 배경은 거부된다. 산출물은 파일이 아니라 메시+머티리얼이 포함된 **Prefab** |
+| `GenerateMesh` | 레퍼런스 이미지에 **실제 알파 채널을 강제**한다. 단색·검정 배경은 거부된다. 산출물은 파일이 아니라 메시+머티리얼이 포함된 **Prefab**. `meshFormat` 미지정 시 기본값은 **fbx**이며(실측 확인) 이 경우 gltfast를 거치지 않는다. `glb`가 필요하면 명시할 것 |
 | `RigMesh` / `TextureMesh` / `RetopologyMesh` | 기존 메시 후처리. `targetAssetPath` 필요 |
 
 ## 4. 프로바이더 구조
@@ -138,6 +142,8 @@ Unity AI는 서드파티 애그리게이터다. `GetModels`로 조회되는 64�
 | **중단 상태 충돌** | "is still being generated, check back later" | 없음 | 유지 | `ManageInterrupted`로 정리 후 재시도 |
 
 `success: false`인데 대상 파일이 이미 바뀐 경우가 있다. AGENTS.md §3.2대로 실패 후에도 상태를 확인한다.
+
+**프로바이더 실패를 손수 구현해 메우지 않는다.** 예를 들어 `RemoveImageBackground`가 쿼터로 막혔을 때 C#으로 배경 제거를 직접 구현해 진행하는 것은 AGENTS.md §1.2(임의 대체 금지)·§1.3(재시도 예외) 위반이다. 실제로 그렇게 진행한 뒤 프로바이더 실패와 자체 구현 사실을 보고에서 누락한 사례가 있었다. 기술적으로 가능한지와 무관하게, 승인 없이 대체하지 않는다.
 
 ## 6. `ManageInterrupted` 운용
 
@@ -178,4 +184,14 @@ AGENTS.md §3.2대로 시각 판단을 금지한다. 생성 이미지는 아래�
 
 `referenceImageInstanceId`는 정수를 요구하는데, Unity 6.6에서 `Object.GetInstanceID()`는 deprecated이고 eval은 경고를 에러로 처리하므로 **호출할 수 없다.** `GetEntityId()`는 `"54850:2304"` 형태의 복합 문자열이라 그대로 쓸 수 없다.
 
-**생성 툴 응답의 `FileInstanceID` 값을 사용한다.** 생성이 성공하면 응답 `data`에 `AssetName`, `AssetPath`, `AssetGuid`와 함께 `FileInstanceID`가 정수로 들어 있다. 이 값을 다음 단계의 `referenceImageInstanceId`로 넘긴다.
+**수단 1 — 생성 툴 응답의 `FileInstanceID`.** 생성이 성공하면 응답 `data`에 `AssetName`, `AssetPath`, `AssetGuid`와 함께 `FileInstanceID`가 정수로 들어 있다. 이 값을 다음 단계의 `referenceImageInstanceId`로 넘긴다.
+
+**수단 2 — 원본 에셋에 덮어써서 기존 ID를 유지한다.** 중간 가공(배경 제거 등)으로 새 이미지 파일을 만들면 그 파일의 정수 ID를 구할 방법이 없다. 이때 새 파일을 참조하려 하지 말고 **가공 결과를 원본 에셋 경로에 덮어쓴다.** 그러면 수단 1로 이미 확보해 둔 ID가 그대로 유효하고, 그 ID가 가공된 이미지를 가리키게 된다.
+
+```csharp
+byte[] bytes = System.IO.File.ReadAllBytes(processedPath);
+System.IO.File.WriteAllBytes(originalAssetPath, bytes);   // ID 유지
+UnityEditor.AssetDatabase.Refresh();
+```
+
+원본이 소실되므로 **덮어쓰기 전 프로젝트 밖에 백업**하고, 원본을 잃는다는 사실을 사용자에게 보고한다.
