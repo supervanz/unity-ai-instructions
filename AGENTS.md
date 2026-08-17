@@ -1,8 +1,8 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 3
-supersedes: AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
+version: 4
+supersedes: AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
 # Unity AI 에이전트 작업 지침
@@ -14,6 +14,8 @@ supersedes: AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instruc
 **v2 변경**: 도메인별 세부 절차(3D 에셋 생성, 공유 패키지, Unity skills, KB 문서 관리)를 `agents-reference/` 아래 별도 파일로 분리했다. 이 문서(§0~4)는 모든 작업에 항상 적용되는 행동 규칙만 담고, 매 작업마다 전체를 다시 읽어도 비용이 크지 않도록 짧게 유지한다. 도메인 절차가 필요한 작업일 때만 §5의 표를 보고 해당 참고 문서를 그때 읽는다.
 
 **v3 변경**: §2.0의 CLI 강제 범위를 좁혔다. Unity CLI/Pipeline은 이 프로젝트에 새로 도입된 자동화 대상(살아있는 Editor 프로세스의 상태를 읽거나 바꾸는 작업)에만 강제하고, 디스크의 정적 파일만으로 답이 되는 조회(패키지 소스/README, 문서, git 이력, 설정 파일 내용)는 셸/파일 도구를 그대로 쓰도록 허용했다. 모든 Unity 관련 조회를 CLI로 강제하던 이전 범위가 불필요하게 호출 횟수를 늘려 토큰을 소모시킨다는 점이 실측으로 확인됨.
+
+**v4 변경**: §5에 "전수 확인 원칙"을 추가했다. 실제 사례에서 요청("스노우글로브 생성")이 §5 표의 두 행(3d-asset-pipeline, shared-packages)에 동시에 해당했으나, 첫 매칭(3d-asset-pipeline) 이후 나머지 행 확인 없이 진행하여 이미 등록된 공유 패키지(`com.custom.snowglobe`)를 두고 프리미티브로 새로 제작하는 결과가 발생함. 조건 문구 비교는 이미 로드된 표 텍스트만으로 이뤄지므로 토큰 비용 증가 없이, 문서 본문을 실제로 여는 시점(조건 매칭 후)의 판단 정확도만 높인다.
 
 ## 0. 문서 우선순위
 
@@ -141,6 +143,8 @@ supersedes: AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instruc
 ## 5. 참고 문서 (필요할 때만 로드)
 
 아래 표에 해당하는 작업일 때만 그 참고 문서를 읽는다. 해당하지 않는 작업이면 이 표만 보고 넘어가면 된다 — 참고 문서 본문을 컨텍스트에 올리지 않는다.
+
+**전수 확인 원칙**: 표의 각 행에 대해 로드 조건 문구만으로 이번 작업 해당 여부를 판단한다(문서 본문은 열지 않고 판단). 한 행이 매칭됐다고 나머지 행 확인을 생략하지 않는다 — 여러 행이 동시에 해당할 수 있다. 조건에 해당하는 행이 있으면 그 문서만 로드한다. 조건 문구만으로 애매하면 그때 문서를 열어 확인한다.
 
 | 참고 문서 | 로드 조건 |
 |---|---|

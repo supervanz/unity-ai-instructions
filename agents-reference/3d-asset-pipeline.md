@@ -1,7 +1,7 @@
 ---
 id: unity-ai-agent-instructions-3d-asset-pipeline
 title: 3D 에셋 생성 검증 절차
-version: 1
+version: 2
 parent: AGENTS.md (2.4의 분리본)
 ---
 
@@ -10,6 +10,16 @@ parent: AGENTS.md (2.4의 분리본)
 **로드 조건**: 3D 모델을 새로 생성하거나 씬에 배치하는 작업일 때만 이 문서를 읽는다. 프리미티브(Cube/Plane 등)만으로 구조/건축 요소를 배치하는 작업, 또는 이미 있는 에셋/패키지를 붙이는 작업에는 이 문서가 필요 없다.
 
 이 문서는 [AGENTS.md](../AGENTS.md) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 AGENTS.md가 우선한다.
+
+**v2 변경**: §0(도구 및 파이프라인 수단 구분)을 추가했다. `Unity.GenerateSceneCodeFromImage`가 `unity command` CLI가 아닌 어시스턴트 도구 체계에 속한다는 점, 그리고 Texture2D 에셋 컨텍스트 경유 호출이 실패한다는 점을 구분하지 못해 생성과 조립을 섞어 시도하는 사례가 있었다.
+
+## 0. 도구 및 파이프라인 수단 구분 (필수)
+- **AI 어시스턴트 도구**: `Unity.GenerateSceneCodeFromImage`는 `unity command` CLI 명령어가 아닌 어시스턴트 도구 체계에 속함.
+  - 채팅 메시지에 이미지 파일이 직접 첨부된 경우: `Unity.GenerateSceneCodeFromImage()`로 직접 Three.js 코드 도출 가능.
+  - Project 패널의 Texture2D 에셋 컨텍스트(`instance_id`)를 통한 호출: 현재 에디터 파이프라인의 `GetImageAssetContent` API 미지원으로 텍스처 데이터 인출 시 실패함.
+- **대응 절차**:
+  - Texture2D 에셋 기반 작업 시 생성(`GenerateAssetTool.GenerateAsset`)과 조립(`unity command` / C# RunCommand)을 분리 수행.
+  - 이미지 파일 직접 첨부 시 `Unity.GenerateSceneCodeFromImage()` 사용 가능.
 
 ## 적용 대상 판단 (프리미티브 vs 3D 생성 모델)
 - 구조/건축 요소(마루, 천장, 벽, 기둥 등 평면·직육면체·단순 형태로 근사 가능한 오브젝트)는 프리미티브(Cube, Plane, Cylinder 등)로 배치 가능.
