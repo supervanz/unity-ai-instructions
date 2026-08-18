@@ -1,8 +1,8 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 5
-supersedes: AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
+version: 6
+supersedes: AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
 # Unity AI 에이전트 작업 지침
@@ -16,6 +16,8 @@ supersedes: AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles
 **v3 변경**: §2.0의 CLI 강제 범위를 좁혔다. Unity CLI/Pipeline은 이 프로젝트에 새로 도입된 자동화 대상(살아있는 Editor 프로세스의 상태를 읽거나 바꾸는 작업)에만 강제하고, 디스크의 정적 파일만으로 답이 되는 조회(패키지 소스/README, 문서, git 이력, 설정 파일 내용)는 셸/파일 도구를 그대로 쓰도록 허용했다. 모든 Unity 관련 조회를 CLI로 강제하던 이전 범위가 불필요하게 호출 횟수를 늘려 토큰을 소모시킨다는 점이 실측으로 확인됨.
 
 **v4 변경**: §5에 "전수 확인 원칙"을 추가했다. 실제 사례에서 요청("스노우글로브 생성")이 §5 표의 두 행(3d-asset-pipeline, shared-packages)에 동시에 해당했으나, 첫 매칭(3d-asset-pipeline) 이후 나머지 행 확인 없이 진행하여 이미 등록된 공유 패키지(`com.custom.snowglobe`)를 두고 프리미티브로 새로 제작하는 결과가 발생함. 조건 문구 비교는 이미 로드된 표 텍스트만으로 이뤄지므로 토큰 비용 증가 없이, 문서 본문을 실제로 여는 시점(조건 매칭 후)의 판단 정확도만 높인다.
+
+**v6 변경**: §2.0에 호출 계층 함정 4건을 추가했다(선행 슬래시 인자의 Git Bash 경로 변환, 인라인 `--code`의 따옴표 유실, `SessionState` 결과 절단, 버전별 API 오타 지점). 모두 이번 세션에서 실제로 시간을 소모한 지점이고 도메인과 무관하게 모든 Editor 작업에 적용되므로 본문에 넣었다. 생성 파이프라인 쪽 변경(배경 크로마키 규약, 마스크 오차 허용, 배치 규약)은 §5의 `ai-generation.md` v3 · `3d-asset-pipeline.md` v4에 있다.
 
 **v5 변경**: AI 생성 서비스 실호출로 확인된 14건 중, 도메인과 무관하게 항상 적용되는 5건만 본문에 넣고(§1.3, §2.0, §3.2) 생성 고유 절차는 `agents-reference/ai-generation.md`로 분리해 §5에 등재했다. 전부 본문에 넣으면 +8~10 KB로 v2의 분리 취지를 되돌린다. 추가된 5건은 모두 실제 실패에서 나왔으며 근거는 분리 문서에 있다.
 
@@ -74,6 +76,10 @@ supersedes: AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles
 - 명령/파라미터를 임의로 가정하지 말고 discovery로 얻은 명령 목록에서 고른다.
 - `eval`/`eval_file`의 C#은 **메인 스레드에서 실행**된다. async 결과를 `.Wait()`/`.Result`로 기다리면 자기 데드락으로 Editor 전체가 정지한다. 시작만 시키고 `EditorApplication.update` 폴링 + `SessionState`로 회수한다.
 - eval은 컴파일 경고를 에러로 처리하며 `#pragma warning disable`이 통하지 않는다. deprecated API는 사용 불가이므로 대체 API나 다른 경로로 값을 얻는다.
+- **선행 슬래시 인자는 PowerShell에서 호출한다.** Git Bash는 `--target "/Foo"`를 `C:/Program Files/Git/Foo`로 변환해 hierarchy path 해석을 깨뜨린다. `/`로 시작하는 파라미터(계층 경로 등)가 있으면 PowerShell 도구를 쓴다.
+- **C# 코드와 JSON 인자는 `--code` 인라인 대신 `.cs` 파일 + `eval_file`로 넘긴다.** 셸이 중첩 따옴표를 먹어 컴파일 에러가 난다. JSON은 파일 안에서 `@"{""k"":""v""}"` 축자 문자열이나 `JObject`로 조립한다.
+- **큰 결과는 `SessionState`가 아니라 파일로 회수한다.** 문자열 절단으로 정보가 유실된다(모델 목록 등 수 KB 응답에서 실제 발생). 러너가 `File.WriteAllText`로 덤프하게 하고 그 파일을 읽는다.
+- 실측 확인된 오타 유발 지점: 씬 저장은 `UnityEditor.SceneManagement.EditorSceneManager`(`EditorSceneManagement` 아님). `Object.GetInstanceID()`와 `SearchService.SceneSelectors`는 이 버전에서 쓸 수 없다.
 
 ### 2.1 사전 조사
 - 코드/에셋 수정 전 관련 스크립트, 파일 간 종속성, 프로젝트 설정(Input System, Render Pipeline 등) 확인.
