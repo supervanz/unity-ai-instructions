@@ -1,8 +1,8 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 7
-supersedes: AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
+version: 8
+supersedes: AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
 # Unity AI 에이전트 작업 지침
@@ -16,6 +16,8 @@ supersedes: AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.m
 **v3 변경**: §2.0의 CLI 강제 범위를 좁혔다. Unity CLI/Pipeline은 이 프로젝트에 새로 도입된 자동화 대상(살아있는 Editor 프로세스의 상태를 읽거나 바꾸는 작업)에만 강제하고, 디스크의 정적 파일만으로 답이 되는 조회(패키지 소스/README, 문서, git 이력, 설정 파일 내용)는 셸/파일 도구를 그대로 쓰도록 허용했다. 모든 Unity 관련 조회를 CLI로 강제하던 이전 범위가 불필요하게 호출 횟수를 늘려 토큰을 소모시킨다는 점이 실측으로 확인됨.
 
 **v4 변경**: §5에 "전수 확인 원칙"을 추가했다. 실제 사례에서 요청("스노우글로브 생성")이 §5 표의 두 행(3d-asset-pipeline, shared-packages)에 동시에 해당했으나, 첫 매칭(3d-asset-pipeline) 이후 나머지 행 확인 없이 진행하여 이미 등록된 공유 패키지(`com.custom.snowglobe`)를 두고 프리미티브로 새로 제작하는 결과가 발생함. 조건 문구 비교는 이미 로드된 표 텍스트만으로 이뤄지므로 토큰 비용 증가 없이, 문서 본문을 실제로 여는 시점(조건 매칭 후)의 판단 정확도만 높인다.
+
+**v8 변경**: 저장소 원본 파일명을 `AGENTS.md`에서 `HARNESS.md`로 개명했다. 각 프로젝트 루트의 배포 사본은 `AGENTS.md`/`CLAUDE.md`라는 이름이고, 이 저장소(원본)에도 같은 이름 `AGENTS.md`가 있어 위치는 다르지만 이름이 같은 두 파일이 존재했다. 실제로 이번 세션에서 그 결과가 나타났다 — 한 프로젝트의 배포 사본 `AGENTS.md`(v5)와 `CLAUDE.md`(front-matter는 v5인데 본문은 v6)가 서로 어긋난 채 방치돼 있었다. "편집 대상 원본"과 "자동 로드되는 배포 사본"을 이름만으로 구분할 수 있도록, 원본에는 이 프로젝트에서 이미 쓰던 '하네스'라는 용어를 살려 `HARNESS.md`로, 배포 사본은 그대로 `AGENTS.md`/`CLAUDE.md`로 남겼다. 손으로 `cp`하다 생기는 표류를 줄이기 위해 `sync.sh`/`sync.ps1`도 함께 추가했다.
 
 **v7 변경**: §1.2에 "임의 재사용 금지"를, §5에 전수 확인 원칙의 "적용 범위"를 추가했다. 실제 사례: 레퍼런스 사진 1장을 주며 "이 이미지를 바탕으로 씬을 만들어라"라고 한 신규 제작 요청에서, 이름이 유사한 기존 씬을 찾아내 "이미 만들어져 있으니 재활용하자"고 제안했다. 그 씬은 비례·용도가 다른 별개 공간이었고 사용자가 작업을 중단시켰다. 원인은 v4에서 추가한 전수 확인 원칙(공유 패키지 재사용 검토)을 씬·레이아웃에까지 확대 적용한 것이며, v4 문안에 적용 범위가 명시돼 있지 않아 그 확대 해석을 막지 못했다. 이번 추가는 범위를 명시해 재발을 막는다.
 
@@ -175,4 +177,4 @@ supersedes: AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.m
 | [agents-reference/kb-management.md](agents-reference/kb-management.md) | `.unity-kb/`에 문서를 추가/수정/삭제하는 작업 |
 | [agents-reference/ai-generation.md](agents-reference/ai-generation.md) | AI 생성 서비스로 에셋(이미지·스프라이트·메시·머티리얼·사운드 등)을 생성하거나 편집하는 작업 |
 
-각 참고 문서는 [AGENTS.md](AGENTS.md) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차이며, 충돌 시 이 문서(§0~4)가 우선한다.
+각 참고 문서는 이 문서(§1~4)의 행동 규칙 아래에서 적용되는 도메인 절차이며, 충돌 시 이 문서(§0~4)가 우선한다.

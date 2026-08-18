@@ -2,14 +2,14 @@
 id: unity-ai-agent-instructions-3d-asset-pipeline
 title: 3D 에셋 생성 검증 절차
 version: 4
-parent: AGENTS.md (2.4의 분리본)
+parent: 상위 지침 문서 (2.4의 분리본)
 ---
 
 # 3D 에셋 생성 검증 절차
 
 **로드 조건**: 3D 모델을 새로 생성하거나 씬에 배치하는 작업일 때만 이 문서를 읽는다. 프리미티브(Cube/Plane 등)만으로 구조/건축 요소를 배치하는 작업, 또는 이미 있는 에셋/패키지를 붙이는 작업에는 이 문서가 필요 없다.
 
-이 문서는 [AGENTS.md](../AGENTS.md) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 AGENTS.md가 우선한다.
+이 문서는 상위 지침 문서(프로젝트 루트: `AGENTS.md`/`CLAUDE.md`, .unity-kb 원본: `HARNESS.md`) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 그 문서(§0~4)가 우선한다.
 
 **v2 변경**: §0(도구 및 파이프라인 수단 구분)을 추가했다. `Unity.GenerateSceneCodeFromImage`가 `unity command` CLI가 아닌 어시스턴트 도구 체계에 속한다는 점, 그리고 Texture2D 에셋 컨텍스트 경유 호출이 실패한다는 점을 구분하지 못해 생성과 조립을 섞어 시도하는 사례가 있었다.
 

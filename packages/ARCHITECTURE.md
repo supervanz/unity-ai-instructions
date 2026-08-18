@@ -39,7 +39,7 @@
 
 ### 각 프로젝트의 재사용 지침 (AGENTS.md)
 
-이 시스템을 쓰는 모든 프로젝트의 `AGENTS.md`에는 "공유 패키지 재사용" 섹션이 있고, 위 표와 동일한 패키지 목록 및 아래 지침을 담고 있다(정확한 문구는 `unity-ai-instructions` 저장소의 `AGENTS.md` 템플릿이 원본):
+이 시스템을 쓰는 모든 프로젝트의 `AGENTS.md`에는 "공유 패키지 재사용" 섹션이 있고, 위 표와 동일한 패키지 목록 및 아래 지침을 담고 있다(정확한 문구는 `unity-ai-instructions` 저장소의 `HARNESS.md` 템플릿이 원본):
 
 > 새로운 공용 시스템(파티클 이펙트, 프리팹, 공용 스크립트 등)이 필요한 작업을 시작하기 전에 목록을 확인한다. 이미 있는 패키지로 요구사항을 충족할 수 있으면 새로 만들지 말고 해당 프로젝트의 `Packages/manifest.json`에 git URL로 추가해서 사용한다. 목록에 없는 새 공용 시스템을 패키지로 만들지 여부는 사용자가 직접 지시하거나 승인한 경우에만 진행한다 — 이 판단은 AI가 임의로 하지 않는다. 사용자 승인을 받아 패키지를 만들고 GitHub push까지 마쳤다면, 그 결과를 이 목록(및 `unity-ai-instructions` 저장소의 이 템플릿)에 등록하는 것은 AI가 직접 해도 된다 — 이미 승인된 결정을 표에 반영하는 기계적 작업이기 때문이다.
 
@@ -71,7 +71,7 @@
    ```
    (`gh` CLI가 `supervanz` 계정으로 로그인/`credential.helper` 연결까지 이미 완료된 머신에서는 그대로 실행 가능. 다른 머신에서는 `gh auth login`부터 다시 필요.)
 3. 필요한 프로젝트의 `Packages/manifest.json`에 4번 항목 형태로 git URL 추가.
-4. 이 시스템을 쓰는 모든 프로젝트의 `AGENTS.md`(및 `unity-ai-instructions` 저장소의 `AGENTS.md` 템플릿)의 "알려진 공유 패키지" 표에 새 항목 한 줄 추가.
+4. 이 시스템을 쓰는 모든 프로젝트의 `AGENTS.md`(및 `unity-ai-instructions` 저장소의 `HARNESS.md` 템플릿)의 "알려진 공유 패키지" 표에 새 항목 한 줄 추가.
 5. 이 문서(`ARCHITECTURE.md`, 로컬 사본은 `D:\UnityCustomPackage\ARCHITECTURE.md`, 원본은 `unity-ai-instructions` 저장소의 `packages/ARCHITECTURE.md`)의 3번 섹션 표에도 동일하게 추가.
 
 ## 6. 알려진 제약 / 아직 안 한 것
@@ -87,11 +87,11 @@
 이 문서가 다루는 "공유 UPM 패키지" 시스템과는 별개로, `AGENTS.md` 템플릿과 `.unity-kb` harness 지침 문서 자체도 git으로 중앙 관리한다:
 
 - 저장소: `https://github.com/supervanz/unity-ai-instructions.git` (private)
-- 담고 있는 것: `AGENTS.md` 원본 템플릿, `.unity-kb/articles/integrated-ai-harness-instructions.md` 원본, 이 문서(`ARCHITECTURE.md`)의 사본
+- 담고 있는 것: `HARNESS.md` 원본 템플릿, `.unity-kb/articles/integrated-ai-harness-instructions.md` 원본, 이 문서(`ARCHITECTURE.md`)의 사본
 - 어떤 프로젝트든 아래 한 줄로 규칙을 받아올 수 있다:
   ```bash
   git clone https://github.com/supervanz/unity-ai-instructions.git .unity-kb
-  cp .unity-kb/AGENTS.md ./AGENTS.md
+  bash .unity-kb/sync.sh   # 또는 Windows에서 .unity-kb\sync.ps1 — HARNESS.md를 AGENTS.md/CLAUDE.md로 복사
   ```
 - 이렇게 하면 프로젝트의 `.unity-kb` 폴더 자체가 이 저장소의 독립 git 체크아웃이 되어, 이후엔 그 폴더 안에서 `git pull`만 하면 최신 규칙을 받는다.
 - 규칙을 고칠 때는 각 프로젝트의 로컬 사본이 아니라 **이 저장소를 고치고 push**한 뒤, 각 프로젝트에서 pull/재복사한다(자세한 동기화 원칙은 그 저장소의 `README.md` 참고).

@@ -2,14 +2,14 @@
 id: unity-ai-agent-instructions-kb-management
 title: 문서 관리 (Knowledge Base Registration)
 version: 1
-parent: AGENTS.md (7의 분리본)
+parent: 상위 지침 문서 (7의 분리본)
 ---
 
 # 문서 관리 (Knowledge Base Registration)
 
 **로드 조건**: `.unity-kb/`에 새 문서를 추가하거나 기존 KB 문서를 수정/삭제하는 작업일 때만 이 문서를 읽는다.
 
-이 문서는 [AGENTS.md](../AGENTS.md) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 AGENTS.md가 우선한다.
+이 문서는 상위 지침 문서(프로젝트 루트: `AGENTS.md`/`CLAUDE.md`, .unity-kb 원본: `HARNESS.md`) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 그 문서(§0~4)가 우선한다.
 
 ## 포맷 및 위치
 - 포맷: .md

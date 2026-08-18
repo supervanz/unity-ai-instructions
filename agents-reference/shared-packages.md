@@ -2,14 +2,14 @@
 id: unity-ai-agent-instructions-shared-packages
 title: 공유 패키지 재사용
 version: 1
-parent: AGENTS.md (5의 분리본)
+parent: 상위 지침 문서 (5의 분리본)
 ---
 
 # 공유 패키지 재사용
 
 **로드 조건**: 새로운 공용 시스템(파티클 이펙트, 프리팹, 공용 스크립트 등)이 필요한 작업을 시작하기 전에 이 문서를 읽는다. 이미 프로젝트에 설치된 패키지를 그대로 쓰는 작업(예: 기존 컴포넌트를 GameObject에 추가하고 파라미터만 조정)에는 이 문서가 필요 없다 — `Packages/manifest.json`과 해당 패키지의 `README.md`만 확인하면 충분하다.
 
-이 문서는 [AGENTS.md](../AGENTS.md) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 AGENTS.md가 우선한다.
+이 문서는 상위 지침 문서(프로젝트 루트: `AGENTS.md`/`CLAUDE.md`, .unity-kb 원본: `HARNESS.md`) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 그 문서(§0~4)가 우선한다.
 
 (배경/취지/전체 구조는 `packages/ARCHITECTURE.md`, 로컬 사본은 `D:\UnityCustomPackage\ARCHITECTURE.md` 참고)
 

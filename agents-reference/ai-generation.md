@@ -2,14 +2,14 @@
 id: unity-ai-agent-instructions-ai-generation
 title: AI 생성 서비스 사용 절차
 version: 3
-parent: AGENTS.md (5의 표 등재)
+parent: 상위 지침 문서 (5의 표 등재)
 ---
 
 # AI 생성 서비스 사용 절차
 
 **로드 조건**: Unity AI 생성 서비스로 에셋(이미지, 스프라이트, 메시, 머티리얼, 사운드, 애니메이션, 큐브맵 등)을 새로 생성하거나 기존 에셋을 편집하는 작업일 때만 이 문서를 읽는다. 이미 생성된 에셋을 씬에 배치하기만 하는 작업, 프리미티브·절차적 생성으로 해결되는 작업에는 이 문서가 필요 없다.
 
-이 문서는 [AGENTS.md](../AGENTS.md) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 AGENTS.md가 우선한다.
+이 문서는 상위 지침 문서(프로젝트 루트: `AGENTS.md`/`CLAUDE.md`, .unity-kb 원본: `HARNESS.md`) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 그 문서(§0~4)가 우선한다.
 
 3D 모델의 **품질 기준과 프리미티브/생성 판단**은 [3d-asset-pipeline.md](3d-asset-pipeline.md)가 담당한다. 이 문서는 **호출 메커니즘**을 담당한다.
 
