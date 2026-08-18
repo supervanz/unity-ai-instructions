@@ -1,8 +1,8 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 8
-supersedes: AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
+version: 9
+supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
 # Unity AI 에이전트 작업 지침
@@ -16,6 +16,8 @@ supersedes: AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.m
 **v3 변경**: §2.0의 CLI 강제 범위를 좁혔다. Unity CLI/Pipeline은 이 프로젝트에 새로 도입된 자동화 대상(살아있는 Editor 프로세스의 상태를 읽거나 바꾸는 작업)에만 강제하고, 디스크의 정적 파일만으로 답이 되는 조회(패키지 소스/README, 문서, git 이력, 설정 파일 내용)는 셸/파일 도구를 그대로 쓰도록 허용했다. 모든 Unity 관련 조회를 CLI로 강제하던 이전 범위가 불필요하게 호출 횟수를 늘려 토큰을 소모시킨다는 점이 실측으로 확인됨.
 
 **v4 변경**: §5에 "전수 확인 원칙"을 추가했다. 실제 사례에서 요청("스노우글로브 생성")이 §5 표의 두 행(3d-asset-pipeline, shared-packages)에 동시에 해당했으나, 첫 매칭(3d-asset-pipeline) 이후 나머지 행 확인 없이 진행하여 이미 등록된 공유 패키지(`com.custom.snowglobe`)를 두고 프리미티브로 새로 제작하는 결과가 발생함. 조건 문구 비교는 이미 로드된 표 텍스트만으로 이뤄지므로 토큰 비용 증가 없이, 문서 본문을 실제로 여는 시점(조건 매칭 후)의 판단 정확도만 높인다.
+
+**v9 변경**: 프리미티브 구조물 + 생성 AI 인물 2체를 한 흐름으로 통합하는 실제 테스트(사막 바 씬)를 완주했다. 메커닉 자체(접지 오차 0, 관통 0)는 검증됐다. §2.0의 `GetInstanceID()` 관련 서술을 대체 수단(`GetEntityId()` 파싱)으로 구체화했다. 그 외 생성 파이프라인 호출 규약 정정(`savePath`/`targetAssetPath` 구분, `RemoveImageBackground`가 참조 ID를 받지 않는다는 것 등)과 배치 절차 보강(yaw 판정 대안, 부정 프롬프트 신뢰 불가)은 `ai-generation.md` v4·`3d-asset-pipeline.md` v5에 있다.
 
 **v8 변경**: 저장소 원본 파일명을 `AGENTS.md`에서 `HARNESS.md`로 개명했다. 각 프로젝트 루트의 배포 사본은 `AGENTS.md`/`CLAUDE.md`라는 이름이고, 이 저장소(원본)에도 같은 이름 `AGENTS.md`가 있어 위치는 다르지만 이름이 같은 두 파일이 존재했다. 실제로 이번 세션에서 그 결과가 나타났다 — 한 프로젝트의 배포 사본 `AGENTS.md`(v5)와 `CLAUDE.md`(front-matter는 v5인데 본문은 v6)가 서로 어긋난 채 방치돼 있었다. "편집 대상 원본"과 "자동 로드되는 배포 사본"을 이름만으로 구분할 수 있도록, 원본에는 이 프로젝트에서 이미 쓰던 '하네스'라는 용어를 살려 `HARNESS.md`로, 배포 사본은 그대로 `AGENTS.md`/`CLAUDE.md`로 남겼다. 손으로 `cp`하다 생기는 표류를 줄이기 위해 `sync.sh`/`sync.ps1`도 함께 추가했다.
 
@@ -87,7 +89,7 @@ supersedes: AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.m
 - **선행 슬래시 인자는 PowerShell에서 호출한다.** Git Bash는 `--target "/Foo"`를 `C:/Program Files/Git/Foo`로 변환해 hierarchy path 해석을 깨뜨린다. `/`로 시작하는 파라미터(계층 경로 등)가 있으면 PowerShell 도구를 쓴다.
 - **C# 코드와 JSON 인자는 `--code` 인라인 대신 `.cs` 파일 + `eval_file`로 넘긴다.** 셸이 중첩 따옴표를 먹어 컴파일 에러가 난다. JSON은 파일 안에서 `@"{""k"":""v""}"` 축자 문자열이나 `JObject`로 조립한다.
 - **큰 결과는 `SessionState`가 아니라 파일로 회수한다.** 문자열 절단으로 정보가 유실된다(모델 목록 등 수 KB 응답에서 실제 발생). 러너가 `File.WriteAllText`로 덤프하게 하고 그 파일을 읽는다.
-- 실측 확인된 오타 유발 지점: 씬 저장은 `UnityEditor.SceneManagement.EditorSceneManager`(`EditorSceneManagement` 아님). `Object.GetInstanceID()`와 `SearchService.SceneSelectors`는 이 버전에서 쓸 수 없다.
+- 실측 확인된 오타 유발 지점: 씬 저장은 `UnityEditor.SceneManagement.EditorSceneManager`(`EditorSceneManagement` 아님). `SearchService.SceneSelectors`는 이 버전에서 쓸 수 없다. `Object.GetInstanceID()`는 직접 호출하면 컴파일이 막히지만(obsolete가 에러로 처리됨), **`obj.GetEntityId().ToString().Split(':')[0]`을 정수로 파싱하면 동일한 값**을 얻는다(reflection 대조로 실측). 다만 이 값이 모든 API에서 유효한 참조로 인정되는 건 아니다 — AI 생성 커맨드의 참조 이미지 지정은 여전히 `ai-generation.md` §9의 절차(생성 응답의 `FileInstanceID`)를 우선한다.
 
 ### 2.1 사전 조사
 - 코드/에셋 수정 전 관련 스크립트, 파일 간 종속성, 프로젝트 설정(Input System, Render Pipeline 등) 확인.

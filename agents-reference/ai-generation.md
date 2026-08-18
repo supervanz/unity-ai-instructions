@@ -1,7 +1,7 @@
 ---
 id: unity-ai-agent-instructions-ai-generation
 title: AI 생성 서비스 사용 절차
-version: 3
+version: 4
 parent: 상위 지침 문서 (5의 표 등재)
 ---
 
@@ -12,6 +12,8 @@ parent: 상위 지침 문서 (5의 표 등재)
 이 문서는 상위 지침 문서(프로젝트 루트: `AGENTS.md`/`CLAUDE.md`, .unity-kb 원본: `HARNESS.md`) §1~4의 행동 규칙 아래에서 적용되는 도메인 절차다. 충돌 시 그 문서(§0~4)가 우선한다.
 
 3D 모델의 **품질 기준과 프리미티브/생성 판단**은 [3d-asset-pipeline.md](3d-asset-pipeline.md)가 담당한다. 이 문서는 **호출 메커니즘**을 담당한다.
+
+**v4 변경**: 프리미티브 구조물 + 생성 AI 인물 2체를 한 흐름으로 통합하는 실제 테스트(사막 바 씬)에서 얻은 결과를 반영했다. 핵심 정정 3건 — ① `RemoveImageBackground`는 `referenceImageInstanceId`를 아예 받지 않는다(§3 표, 이전 문서가 §9에서 이 커맨드에도 참조 ID가 쓰인다고 암시한 것은 틀렸다). ② `GenerateMesh`는 신규 생성이므로 `targetAssetPath`가 아니라 `savePath`를 써야 한다 — 반대로 넣으면 "Failed to find a valid GameObject asset"로 즉시 실패한다(§3). ③ §9의 "`GetEntityId()`는 복합 문자열이라 그대로 쓸 수 없다"는 서술이 틀렸다 — 콜론 앞 숫자가 deprecated `GetInstanceID()`와 정확히 일치한다는 것을 reflection 대조로 실측했다(§9). 추가로: §5의 Photoroom 사전 프로브 절차가 실제로는 참조 ID 없이 `targetAssetPath`만으로 동작해야 한다는 것, 부정 프롬프트("no X visible")가 신뢰할 수 없다는 실측(§7), 독립적인 생성 호출은 병렬 실행이 가능하다는 것(§1)을 반영했다.
 
 **v3 변경**: 인물 1종(2D 시트 → 배경 제거 → 메시 → 씬 배치)을 실제로 완주하며 얻은 결과를 반영했다. 핵심은 **§7의 배경 규약을 검정에서 크로마키로 바꾼 것**이다 — 검정을 요구해도 모델이 비네트 그라디언트를 그리고, 어두운 의복이 배경보다 더 어두워져 색으로 분리할 수 없다는 것이 수치로 확인됐다. 배경 지정만 크로마키로 바꾸면 §10의 복구 절차 자체가 대부분 불필요해진다. 함께 반영한 것 — §5에 Photoroom 가용성 사전 프로브(포인트 0)와 승인 시 자체 구현이 정상 경로임을 명시, §8에 배경 평탄도 사전 측정과 **마스크 오차 허용 한계**(결손이 있어도 Tripo가 정상 메시를 만든다는 실측), §10에 검증된 자체 구현 절차와 기각된 방향.
 
@@ -85,7 +87,7 @@ return "fired -> SessionState[" + key + "]";
 
 회수는 별도 호출로: `unity command eval --code 'return UnityEditor.SessionState.GetString("<key>","NOT_SET");'`
 
-생성은 보통 20~40초, 메시는 그 이상 걸린다. 폴링은 백그라운드로 돌린다.
+생성은 보통 20~40초, 메시는 그 이상 걸린다. 폴링은 백그라운드로 돌린다. 실측(사막 바 테스트, 인물 2체): 전신 시트 생성 ~30초, 배경 제거 ~20~25초, `GenerateMesh` 82~88초. **서로 독립적인 생성 호출은 동시에 fire해도 된다** — 한쪽의 폴링을 기다리는 동안 다른 쪽을 fire해서 총 대기시간을 줄일 수 있음을 확인했다(한 캐릭터의 메시 생성과 다른 캐릭터의 시트 생성을 동시에 진행).
 
 **실행 샌드박스 차이**: Unity Assistant의 `RunCommand`는 `unity command eval`보다 제약이 크다 — `System.Reflection` 등 일부 네임스페이스를 아예 차단한다. 두 경로 모두 컴파일 경고를 에러로 처리하며 `#pragma warning disable`이 통하지 않는다.
 
@@ -112,12 +114,14 @@ GenerateTerrainLayer, AddPbrToTerrainLayer, RetopologyMesh, TextureMesh, RigMesh
 
 주요 파라미터: `modelId`, `prompt`, `savePath`, `targetAssetPath`, `waitForCompletion`, `referenceImageInstanceId`, `referenceImageInstanceIds[]`, `referenceImageLabels[]`, `width`, `height`, `meshFormat`(`glb`|`fbx`), `durationInSeconds`, `loop`, `voiceName`, `forceGeneration`.
 
+**`savePath` vs `targetAssetPath` — 신규 생성이냐 기존 에셋 편집이냐로 갈린다(실측 확인).** `GenerateSprite`/`GenerateImage`/`GenerateMesh`처럼 **새 에셋을 만드는** 커맨드는 `savePath`를 쓴다. `RemoveImageBackground`/`EditImageWithPrompt`/`RigMesh`/`TextureMesh`/`RetopologyMesh`처럼 **기존 에셋을 그 자리에서 고치는** 커맨드는 `targetAssetPath`를 쓴다. 반대로 넣으면(`GenerateMesh`에 `targetAssetPath`) "Failed to find a valid GameObject asset at the specified path"로 즉시 실패한다.
+
 ### 커맨드별 주의
 
 | 커맨드 | 확인된 특성 |
 |---|---|
 | `GenerateSprite` / `GenerateImage` | `modelId` 유효. 배경은 불투명하게 나온다 — 투명이 필요하면 별도 단계 필요 |
-| `RemoveImageBackground` | **`modelId`를 무시**하고 `photoroom-bg-removal`에 하드 라우팅. 모델 교체로 우회 불가 |
+| `RemoveImageBackground` | **`modelId`를 무시**하고 `photoroom-bg-removal`에 하드 라우팅. 모델 교체로 우회 불가. **`referenceImageInstanceId`를 받지 않는다**("A 'referenceImageInstanceId' cannot be used when removing a background") — `targetAssetPath`만 넘긴다 |
 | `EditImageWithPrompt` | **`savePath`를 무시**하고 `targetAssetPath`에 in-place로 덮어쓴다. 해상도도 바뀔 수 있다(1024→1008 실측). 실행 전 원본 백업 필수 |
 | `GenerateMesh` | 레퍼런스 이미지에 **실제 알파 채널을 강제**한다. 단색·검정 배경은 거부된다. 산출물은 파일이 아니라 메시+머티리얼이 포함된 **Prefab**. `meshFormat` 미지정 시 기본값은 **fbx**이며(실측 확인) 이 경우 gltfast를 거치지 않는다. `glb`가 필요하면 명시할 것 |
 | `RigMesh` / `TextureMesh` / `RetopologyMesh` | 기존 메시 후처리. `targetAssetPath` 필요 |
@@ -149,7 +153,7 @@ Unity AI는 서드파티 애그리게이터다. `GetModels`로 조회되는 64�
 
 단 **사용자 승인을 받으면 자체 구현이 정상 경로다.** 절차와 검증된 구현은 §10에 있다. 승인 요청 시 §1.4 서식의 옵션으로 제시하고, 진행 후 보고에는 "프로바이더 실패 → 승인 하에 자체 구현" 사실을 반드시 명시한다.
 
-**Photoroom 가용성 사전 프로브 (시트 생성 전 필수)**: 절차적으로 만든 128×128 더미 PNG 한 장에 `RemoveImageBackground`를 1회 호출한다. 생성 포인트 0, 소요 약 19초로 쿼터 차단 여부가 확정된다. 실측 확인 — 이 프로브 없이 진행한 세션은 시트 3장을 만든 뒤 막힌 것을 발견해 전부 폐기했고, 프로브를 먼저 돌린 세션은 더미 960바이트로 같은 결론에 도달했다. 프로브가 실패하면 그 더미 에셋이 중단 목록에 편입되므로 `ManageInterrupted(Discard)`로 정리하고 더미를 삭제한다.
+**Photoroom 가용성 사전 프로브 (시트 생성 전 필수)**: 절차적으로 만든 128×128 더미 PNG 한 장을 프로젝트에 임포트하고, `RemoveImageBackground`를 `targetAssetPath`로 그 더미를 가리켜 1회 호출한다. **`referenceImageInstanceId`는 넣지 않는다** — 이 커맨드는 그 파라미터를 아예 받지 않으며(위 §3), 더미의 instance ID를 구하려 애쓸 필요 자체가 없다. 생성 포인트 0, 소요 약 19~25초로 쿼터 차단 여부가 확정된다. 실측 확인 — 이 프로브 없이 진행한 세션은 시트 3장을 만든 뒤 막힌 것을 발견해 전부 폐기했고, 프로브를 먼저 돌린 세션은 더미 960바이트로 같은 결론에 도달했다. 프로브가 실패하면 그 더미 에셋이 중단 목록에 편입되므로 `ManageInterrupted(Discard)`로 정리하고 더미를 삭제한다.
 
 ## 6. `ManageInterrupted` 운용
 
@@ -172,6 +176,8 @@ Unity AI는 서드파티 애그리게이터다. `GetModels`로 조회되는 64�
 
 **함정**: 프롬프트로 `transparent background`를 요구하면 알파 채널이 만들어지는 게 아니라 **투명을 표현하는 체커보드 무늬가 불투명 픽셀로 그려진다.** 눈으로 보면 투명해 보이지만 알파는 전부 255다. 알파가 필요하면 `RemoveImageBackground` 또는 §10을 써야 한다.
 
+**부정 지시는 신뢰할 수 없다(실측).** 프롬프트에 "no stool or chair visible, only the seated figure"처럼 명시적으로 넣어도, 모델이 의자를 포함시킨 채 생성한 사례가 있었다. 재시도로 해결하려 하지 말고(같은 프롬프트를 다시 돌려도 재현 보장이 없다), **씬 배치 단계에서 흡수할 계획을 세운다** — 예: 그 자리에 이미 놓아둔 프리미티브 소품을 제거하고 생성된 메시가 가져온 소품을 그대로 쓴다. 다만 프리미티브와 생성물의 소품 스타일(재질·색)이 어긋날 수 있으므로 최종 스크린샷에서 눈에 띄는 불일치가 없는지 확인한다.
+
 ## 8. 수치 검증 기준
 
 AGENTS.md §3.2대로 시각 판단을 금지한다. 생성 이미지는 아래를 측정해 판정한다.
@@ -193,7 +199,18 @@ AGENTS.md §3.2대로 시각 판단을 금지한다. 생성 이미지는 아래�
 
 ## 9. 정수 instance id 획득
 
-`referenceImageInstanceId`는 정수를 요구하는데, Unity 6.6에서 `Object.GetInstanceID()`는 deprecated이고 eval은 경고를 에러로 처리하므로 **호출할 수 없다.** `GetEntityId()`는 `"54850:2304"` 형태의 복합 문자열이라 그대로 쓸 수 없다.
+`referenceImageInstanceId`는 정수를 요구하는데, Unity 6.6에서 `Object.GetInstanceID()`는 deprecated이고 eval은 경고를 에러로 처리하므로 **직접 호출하면 컴파일이 막힌다.**
+
+**정정(실측, 이전 버전 오류)**: 이 문서는 한때 `GetEntityId()`가 `"54850:2304"` 형태의 복합 문자열이라 "그대로 쓸 수 없다"고 적었으나 **틀렸다.** 콜론 앞 숫자가 deprecated `GetInstanceID()`가 반환했을 값과 **정수 단위로 정확히 일치**한다 — reflection으로 두 메서드를 나란히 호출해 비교 확인했다(런타임 임시 오브젝트, 그리고 프로젝트에 저장된 실제 에셋 양쪽 모두). 즉:
+
+```csharp
+var eid = obj.GetEntityId();
+int classicInstanceId = int.Parse(eid.ToString().Split(':')[0]);  // 예: "32607:1280" -> 32607
+```
+
+reflection 없이, 경고를 에러로 만드는 obsolete 호출 없이 값을 얻을 수 있다. 콜론 뒤 숫자(예 `1280`)는 세대/버전 카운터로 추정되나 검증하지 않았다.
+
+**단, 이 값이 모든 곳에서 통하는 건 아니다(실측).** `RemoveImageBackground`가 애초에 `referenceImageInstanceId`를 받지 않는 것처럼(§3), 일부 생성 커맨드는 **자신이 발급한 생성 응답에서 나온 ID만 유효한 참조로 인정**하고, 이 방법으로 구한 "정확하지만 출처가 다른" ID는 "does not exist"로 거부할 수 있다 — 실제로 절차적으로 만든 더미 PNG에 이 방법으로 구한 ID를 `GenerateMesh`류 커맨드에 넘겼더니 거부당한 사례가 있다. 이 기법은 **`set_selection --instance_ids` 같은, 임의의 Unity 오브젝트를 가리키면 되는 다른 용도**에 우선 쓰고, AI 생성 커맨드의 참조 이미지는 아래 수단 1(생성 응답의 `FileInstanceID`)을 계속 우선한다.
 
 **수단 1 — 생성 툴 응답의 `FileInstanceID`.** 생성이 성공하면 응답 `data`에 `AssetName`, `AssetPath`, `AssetGuid`와 함께 `FileInstanceID`가 정수로 들어 있다. 이 값을 다음 단계의 `referenceImageInstanceId`로 넘긴다.
 
