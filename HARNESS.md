@@ -1,7 +1,7 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 10
+version: 11
 supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
@@ -175,5 +175,6 @@ supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.m
 | [agents-reference/unity-skills.md](agents-reference/unity-skills.md) | 패키지 관리, UI, 빌드/배포, IAP, LevelPlay 연동, 신규 프로젝트 초기화 등 Unity 공식 skill 영역의 작업 |
 | [agents-reference/kb-management.md](agents-reference/kb-management.md) | `.unity-kb/`에 문서를 추가/수정/삭제하는 작업 |
 | [agents-reference/ai-generation.md](agents-reference/ai-generation.md) | AI 생성 서비스로 에셋(이미지·스프라이트·메시·머티리얼·사운드 등)을 생성하거나 편집하는 작업 |
+| [agents-reference/animation-pose.md](agents-reference/animation-pose.md) | `GenerateHumanoidAnimation` 등으로 캐릭터의 동작(motion) 또는 정지 포즈(pose)를 생성하는 작업 |
 
 각 참고 문서는 이 문서(§1~4)의 행동 규칙 아래에서 적용되는 도메인 절차이며, 충돌 시 이 문서(§0~4)가 우선한다.
