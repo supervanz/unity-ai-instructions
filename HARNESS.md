@@ -60,20 +60,33 @@ supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.m
 ## 2. 실행 및 검증 루프 (Execution & Verification Loop)
 
 ### 2.0 Unity Editor 상호작용 준비
-- CLI/Pipeline 강제 대상: 살아있는 Editor 프로세스의 상태를 읽거나 바꾸는 작업 — 씬/GameObject/컴포넌트 조작, 콘솔 로그 조회, 컴파일·도메인 리로드, 플레이모드, 빌드, 스크린샷 등. 이 범위는 셸로 우회하지 않고 `unity command ...`만 사용한다.
-- CLI 강제 제외: 디스크의 정적 파일만 읽어서 답할 수 있는 작업(패키지 소스/README, 프로젝트 문서, git 이력, manifest.json 등 설정 파일)은 셸/파일 도구를 그대로 쓴다. live Editor 프로세스와 무관한 조회이므로 CLI를 거칠 필요가 없다.
-- 판단 기준: "지금 이 순간 Editor가 메모리에 들고 있는 상태"가 답이면 CLI, "디스크에 고정된 내용"으로 충분하면 파일 도구. 애매한 경우(예: Library의 캐시 스냅샷 파일)엔 파일을 읽어도 되지만, 그 값이 live 상태와 다를 수 있다는 점을 보고에 명시한다.
+
+#### 2.0.1 판단 기준 (live 채널 vs 파일 도구)
+- live 채널 강제 대상: 살아있는 Editor 프로세스의 상태를 읽거나 바꾸는 작업 — 씬/GameObject/컴포넌트 조작, 콘솔 로그 조회, 컴파일·도메인 리로드, 플레이모드, 빌드, 스크린샷 등. 이 범위는 셸로 우회하지 않고 연결된 live 채널(이 프로젝트에서는 `unity command ...`; MCP가 연결된 환경이면 MCP도 동급의 live 채널)로만 수행한다.
+- 파일 도구 대상: 디스크의 정적 파일만 읽어서 답할 수 있는 작업(패키지 소스/README, 프로젝트 문서, git 이력, manifest.json 등 설정 파일)은 셸/파일 도구를 그대로 쓴다. live Editor 프로세스와 무관한 조회이므로 live 채널을 거칠 필요가 없다.
+- 판단 기준: "지금 이 순간 Editor가 메모리에 들고 있는 상태"가 답이면 live 채널, "디스크에 고정된 내용"으로 충분하면 파일 도구. 애매한 경우(예: Library의 캐시 스냅샷 파일)엔 파일을 읽어도 되지만, 그 값이 live 상태와 다를 수 있다는 점을 보고에 명시한다.
+- 쓰기 작업의 반영 규칙: 파일 도구로 `.cs`/에셋을 디스크에 새로 쓰거나 수정하는 것은 허용되지만, 그 변화는 live Editor에 자동 반영되지 않는다. 쓰기는 파일 도구로 하되, 반영은 live 채널로 트리거(AssetDatabase refresh/import → 컴파일·도메인 리로드)하고 이어서 2.3 검증으로 넘어간다.
+
+#### 2.0.2 기동 절차
 - Editor 작업을 시작하기 전 `unity command`를 실행해 연결된 Pipeline 버전이 제공하는 명령을 확인한다.
 - 그다음 `unity command editor_status`를 실행하고, 결과가 `status: ready`일 때만 진행한다.
 - 호스트 Unity 프로세스를 조사할 권한으로 `unity command ...`를 실행한다 — 샌드박스된 프로세스 탐색이 살아있는 Pipeline descriptor를 stale로 잘못 분류해 제거하고 서버가 unreachable한 것처럼 보이게 할 수 있다.
 - discovery가 실패하면 `unity pipeline list`를 확인한다. Pipeline 패키지가 설치된 실행 중인 프로젝트인데 PID/서버 포트/서버 연결이 없다면 대개 프로세스 검증 실패나 서버 시작 문제다.
 - 명령/파라미터를 임의로 가정하지 말고 discovery로 얻은 명령 목록에서 고른다.
+
+#### 2.0.3 eval/eval_file 호출 시 주의사항
 - `eval`/`eval_file`의 C#은 **메인 스레드에서 실행**된다. async 결과를 `.Wait()`/`.Result`로 기다리면 자기 데드락으로 Editor 전체가 정지한다. 시작만 시키고 `EditorApplication.update` 폴링 + `SessionState`로 회수한다.
 - eval은 컴파일 경고를 에러로 처리하며 `#pragma warning disable`이 통하지 않는다. deprecated API는 사용 불가이므로 대체 API나 다른 경로로 값을 얻는다.
-- **선행 슬래시 인자는 PowerShell에서 호출한다.** Git Bash는 `--target "/Foo"`를 `C:/Program Files/Git/Foo`로 변환해 hierarchy path 해석을 깨뜨린다. `/`로 시작하는 파라미터(계층 경로 등)가 있으면 PowerShell 도구를 쓴다.
+- **선행 슬래시 인자는 PowerShell에서 호출한다.** Git Bash는 `--target "/Foo"`를 `C:/Program Files/Git/Foo`로 변환(MSYS path conversion)해 hierarchy path 해석을 깨뜨린다. `/`로 시작하는 파라미터(계층 경로 등)가 있으면 PowerShell 도구를 쓴다. 셸 전환이 불가한 경우엔 `MSYS_NO_PATHCONV=1` 접두 실행 또는 이중 슬래시(`//Foo`) 회피책을 쓴다.
 - **C# 코드와 JSON 인자는 `--code` 인라인 대신 `.cs` 파일 + `eval_file`로 넘긴다.** 셸이 중첩 따옴표를 먹어 컴파일 에러가 난다. JSON은 파일 안에서 `@"{""k"":""v""}"` 축자 문자열이나 `JObject`로 조립한다.
 - **큰 결과는 `SessionState`가 아니라 파일로 회수한다.** 문자열 절단으로 정보가 유실된다(모델 목록 등 수 KB 응답에서 실제 발생). 러너가 `File.WriteAllText`로 덤프하게 하고 그 파일을 읽는다.
-- 실측 확인된 오타 유발 지점: 씬 저장은 `UnityEditor.SceneManagement.EditorSceneManager`(`EditorSceneManagement` 아님). `SearchService.SceneSelectors`는 이 버전에서 쓸 수 없다. `Object.GetInstanceID()`는 직접 호출하면 컴파일이 막히지만(obsolete가 에러로 처리됨), **`obj.GetEntityId().ToString().Split(':')[0]`을 정수로 파싱하면 동일한 값**을 얻는다(reflection 대조로 실측). 다만 이 값이 모든 API에서 유효한 참조로 인정되는 건 아니다 — AI 생성 커맨드의 참조 이미지 지정은 여전히 `ai-generation.md` §9의 절차(생성 응답의 `FileInstanceID`)를 우선한다.
+- **씬/오브젝트 변경 시 Undo·변경 추적을 등록한다.** live 채널로 GameObject/컴포넌트를 생성·수정·삭제할 때 Undo 등록(또는 해당 채널이 제공하는 변경 등록 API)을 빠뜨리면 이력·검증이 꼬인다. 생성/수정/삭제마다 등록을 동반한다.
+- **플레이모드 검증은 단일 스크립트에서 진입→테스트→종료를 한 번에 수행한다.** 진입과 테스트를 별도 호출로 쪼개면 도메인 리로드로 상태가 날아간다. 원칙적으로 EditMode에서 검증하고, 런타임 동작 확인이 꼭 필요할 때만 단일 커맨드 내 플레이모드를 쓴다.
+
+#### 2.0.4 알려진 API 함정
+- 씬 저장은 `UnityEditor.SceneManagement.EditorSceneManager`(`EditorSceneManagement` 아님).
+- `SearchService.SceneSelectors`는 이 버전에서 쓸 수 없다.
+- `Object.GetInstanceID()`는 직접 호출하면 컴파일이 막히지만(obsolete가 에러로 처리됨), **`obj.GetEntityId().ToString().Split(':')[0]`을 정수로 파싱하면 동일한 값**을 얻는다(reflection 대조로 실측). 다만 이 값이 모든 API에서 유효한 참조로 인정되는 건 아니다 — AI 생성 커맨드의 참조 이미지 지정은 여전히 `ai-generation.md` §9의 절차(생성 응답의 `FileInstanceID`)를 우선한다.
 
 ### 2.1 사전 조사
 - 코드/에셋 수정 전 관련 스크립트, 파일 간 종속성, 프로젝트 설정(Input System, Render Pipeline 등) 확인.
@@ -83,6 +96,7 @@ supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.m
 
 ### 2.3 결과 검증 - 코드
 - Editor/프로젝트 변경 후에는 컴파일과 도메인 리로드가 끝날 때까지 기다리고 `editor_status`가 ready인지 재확인한다.
+- 파일 도구로 스크립트/에셋을 쓴 경우, 반영(refresh/import)이 트리거되어 컴파일·도메인 리로드가 돌았는지부터 확인한 뒤 검증을 진행한다.
 - `unity command get_console_logs --severity Error --limit 100`으로 컴파일 에러, 런타임 경고를 확인한다.
 - 예시: `unity command screenshot --view game --output <absolute-workspace-path>.png --width 1280 --height 720`로 Game view를 캡처하고, 보고 전에 직접 확인한다.
 - 컴파일 실패, 콘솔 에러, 스크린샷 실패, 예상과 다른 시각적 결과는 성공으로 포장하지 않고 있는 그대로 보고한다.
