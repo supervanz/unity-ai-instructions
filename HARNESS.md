@@ -1,7 +1,7 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 11
+version: 12
 supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
@@ -167,6 +167,8 @@ supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.m
 **전수 확인 원칙**: 표의 각 행에 대해 로드 조건 문구만으로 이번 작업 해당 여부를 판단한다(문서 본문은 열지 않고 판단). 한 행이 매칭됐다고 나머지 행 확인을 생략하지 않는다 — 여러 행이 동시에 해당할 수 있다. 조건에 해당하는 행이 있으면 그 문서만 로드한다. 조건 문구만으로 애매하면 그때 문서를 열어 확인한다.
 
 **적용 범위**: 전수 확인 원칙은 **이 표의 로드 조건 판정에만** 적용된다. 이것을 "기존 산출물을 최대한 재사용하라"는 일반 원칙으로 확대 해석하지 않는다. 재사용 검토 대상은 `shared-packages.md`의 공유 패키지와 `3d-asset-pipeline.md`의 생성 에셋(생성 포인트 낭비 방지)에 한정된다. **씬·레이아웃·구도·연출에는 적용하지 않는다** — §1.2의 임의 재사용 금지를 따른다.
+
+**Unity 공식 skill 자동 설치 (실험 단계 표준 승인)**: `unity-skills.md`에 해당하는 작업인데 필요한 스킬이 `.claude/skills/`에도, 벤더 스냅샷(`vendor/unity-technologies-skills/`)에도 없으면, §1.1/1.4의 승인 게이트를 거치지 않고 GitHub(`Unity-Technologies/skills`)에서 그 스킬 폴더만 즉시 받아 `.claude/skills/`에 설치하고 바로 쓴다. 절차는 `agents-reference/unity-skills.md`를 따른다. 벤더 스냅샷(`vendor/`) 자체를 갱신하는 것은 여전히 저장소 관리자만 하는 별도 작업이며 이 예외의 대상이 아니다. **이 예외는 하네스·스킬셋을 시스템화하는 실험 단계에 한정된 표준 승인이다 — 실 프로덕션 프로젝트에 투입하기 전 재검토가 필요하다.**
 
 | 참고 문서 | 로드 조건 |
 |---|---|
