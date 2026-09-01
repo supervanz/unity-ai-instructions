@@ -1,7 +1,7 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 12
+version: 13
 supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
@@ -164,9 +164,9 @@ supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.m
 
 아래 표에 해당하는 작업일 때만 그 참고 문서를 읽는다. 해당하지 않는 작업이면 이 표만 보고 넘어가면 된다 — 참고 문서 본문을 컨텍스트에 올리지 않는다.
 
-**전수 확인 원칙**: 표의 각 행에 대해 로드 조건 문구만으로 이번 작업 해당 여부를 판단한다(문서 본문은 열지 않고 판단). 한 행이 매칭됐다고 나머지 행 확인을 생략하지 않는다 — 여러 행이 동시에 해당할 수 있다. 조건에 해당하는 행이 있으면 그 문서만 로드한다. 조건 문구만으로 애매하면 그때 문서를 열어 확인한다.
+**행은 서로 배타적이지 않다.** 한 작업이 여러 행에 걸칠 수 있으므로, 첫 매칭에서 멈추지 말고 표 전체를 훑어 해당하는 문서를 **모두** 로드한다. 판정은 로드 조건 문구만으로 하고(문서 본문은 열지 않는다), 문구만으로 애매할 때만 그 문서를 열어 확인한다.
 
-**적용 범위**: 전수 확인 원칙은 **이 표의 로드 조건 판정에만** 적용된다. 이것을 "기존 산출물을 최대한 재사용하라"는 일반 원칙으로 확대 해석하지 않는다. 재사용 검토 대상은 `shared-packages.md`의 공유 패키지와 `3d-asset-pipeline.md`의 생성 에셋(생성 포인트 낭비 방지)에 한정된다. **씬·레이아웃·구도·연출에는 적용하지 않는다** — §1.2의 임의 재사용 금지를 따른다.
+이것은 **이 표의 로드 판정 규칙일 뿐이다.** 무엇을 재사용할지는 §1.2가 정한다 — 재사용을 검토하는 대상은 `shared-packages.md`의 공유 패키지와 `3d-asset-pipeline.md`의 생성 에셋(생성 포인트 낭비 방지)뿐이고, **씬·레이아웃·구도·연출은 대상이 아니다.**
 
 **Unity 공식 skill 자동 설치 (실험 단계 표준 승인)**: `unity-skills.md`에 해당하는 작업인데 필요한 스킬이 `.claude/skills/`에도, 벤더 스냅샷(`vendor/unity-technologies-skills/`)에도 없으면, §1.1/1.4의 승인 게이트를 거치지 않고 GitHub(`Unity-Technologies/skills`)에서 그 스킬 폴더만 즉시 받아 `.claude/skills/`에 설치하고 바로 쓴다. 절차는 `agents-reference/unity-skills.md`를 따른다. 벤더 스냅샷(`vendor/`) 자체를 갱신하는 것은 여전히 저장소 관리자만 하는 별도 작업이며 이 예외의 대상이 아니다. **이 예외는 하네스·스킬셋을 시스템화하는 실험 단계에 한정된 표준 승인이다 — 실 프로덕션 프로젝트에 투입하기 전 재검토가 필요하다.**
 
@@ -176,7 +176,8 @@ supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.m
 | [agents-reference/shared-packages.md](agents-reference/shared-packages.md) | 새로운 공용 시스템(파티클, 프리팹, 공용 스크립트 등)이 필요해서 기존 공유 패키지로 충족 가능한지 확인해야 하는 작업 |
 | [agents-reference/unity-skills.md](agents-reference/unity-skills.md) | 패키지 관리, UI, 빌드/배포, IAP, LevelPlay 연동, 신규 프로젝트 초기화 등 Unity 공식 skill 영역의 작업 |
 | [agents-reference/kb-management.md](agents-reference/kb-management.md) | `.unity-kb/`에 문서를 추가/수정/삭제하는 작업 |
-| [agents-reference/ai-generation.md](agents-reference/ai-generation.md) | AI 생성 서비스로 에셋(이미지·스프라이트·메시·머티리얼·사운드 등)을 생성하거나 편집하는 작업 |
+| [agents-reference/ai-generation.md](agents-reference/ai-generation.md) | AI 생성 서비스로 에셋(이미지·스프라이트·메시·머티리얼·사운드 등)을 생성하거나 편집하는 작업. **에셋 생성의 기본 경로다** — 아래 `local-comfyui-stack.md` 조건에 해당하는 작업일 때만 제외한다 |
 | [agents-reference/animation-pose.md](agents-reference/animation-pose.md) | `GenerateHumanoidAnimation` 등으로 캐릭터의 동작(motion) 또는 정지 포즈(pose)를 생성하는 작업 |
+| [agents-reference/local-comfyui-stack.md](agents-reference/local-comfyui-stack.md) | **사용자가 "로컬"·"ComfyUI"로 하라고 명시한** 에셋·애니메이션 생성 작업이면서, **`H:\source\ComfyUI\CLAUDE.md` 파일이 존재하는 PC**일 때. 둘 중 하나라도 아니면 해당 없음이며 본문을 열지 않는다 — 명시가 없으면 자동으로 로컬로 보내지 않고 `ai-generation.md`(클라우드)를 쓴다 |
 
 각 참고 문서는 이 문서(§1~4)의 행동 규칙 아래에서 적용되는 도메인 절차이며, 충돌 시 이 문서(§0~4)가 우선한다.
