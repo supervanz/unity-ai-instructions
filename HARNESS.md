@@ -1,7 +1,7 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 13
+version: 14
 supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
@@ -172,6 +172,7 @@ supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.m
 
 | 참고 문서 | 로드 조건 |
 |---|---|
+| [agents-reference/scene-from-reference-image.md](agents-reference/scene-from-reference-image.md) | 사용자가 제공한 이미지 한 장을 기준으로 Unity 씬 하나를 통째로(공간 구조 + 오브젝트 배치 + 카메라) 재구성하는 작업. 개별 에셋 하나만 생성·배치하는 작업에는 해당 없음 — 그 경우는 아래 3d-asset-pipeline.md·ai-generation.md를 바로 쓴다 |
 | [agents-reference/3d-asset-pipeline.md](agents-reference/3d-asset-pipeline.md) | 3D 모델을 새로 생성하거나 씬에 배치하는 작업 |
 | [agents-reference/shared-packages.md](agents-reference/shared-packages.md) | 새로운 공용 시스템(파티클, 프리팹, 공용 스크립트 등)이 필요해서 기존 공유 패키지로 충족 가능한지 확인해야 하는 작업 |
 | [agents-reference/unity-skills.md](agents-reference/unity-skills.md) | 패키지 관리, UI, 빌드/배포, IAP, LevelPlay 연동, 신규 프로젝트 초기화 등 Unity 공식 skill 영역의 작업 |
