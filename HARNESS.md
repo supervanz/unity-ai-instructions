@@ -1,7 +1,7 @@
 ---
 id: unity-ai-agent-instructions
 title: 통합 AI 에이전트 작업 지침
-version: 15
+version: 16
 supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.md(v4), AGENTS.md(v3), AGENTS.md(v2), AGENTS.md(v1), articles/integrated-ai-harness-instructions.md(v3)
 ---
 
@@ -99,6 +99,12 @@ supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.m
 - `SearchService.SceneSelectors`는 이 버전에서 쓸 수 없다.
 - `Object.GetInstanceID()`는 직접 호출하면 컴파일이 막히지만(obsolete가 에러로 처리됨), **`obj.GetEntityId().ToString().Split(':')[0]`을 정수로 파싱하면 동일한 값**을 얻는다(reflection 대조로 실측). 다만 이 값이 모든 API에서 유효한 참조로 인정되는 건 아니다 — AI 생성 커맨드의 참조 이미지 지정은 여전히 `ai-generation.md` §9의 절차(생성 응답의 `FileInstanceID`)를 우선한다.
 
+#### 2.0.5 씬 저장 상태와 모달 대화상자 (요약)
+- 상세 절차는 `agents-reference/scene-save-modal.md`에 있다. 씬 저장·전환, `run_tests`·플레이모드 진입, 열린 씬 수정, 모달·리로드 타임아웃이 생기면 읽는다.
+- 미저장 변경 보존이 테스트 편의보다 우선한다. 시작 시 있던 미저장 변경은 보존 방식을 합의하기 전까지 저장·폐기하지 않는다. Editor를 다른 세션이 공유할 수 있으므로 저장·전환·테스트 직전에 상태를 다시 확인한다.
+- 열린 `.unity`에는 파일 패치를 하지 않고 live API로만 수정한다. `save_all`, `"Don't Save"`, 무조건 저장, Editor 강제 종료, 씬 강제 재로드는 쓰지 않는다.
+- 처음 보는 모달이나 대상·버튼을 확실히 식별하지 못한 창은 조작하지 않고 §1.4로 보고하고 멈춘다. 빈 응답·타임아웃만으로 모달이나 코드 오류를 단정하지 않으며, 변경 명령을 즉시 다시 보내지 않는다.
+
 ### 2.1 사전 조사
 - 코드/에셋 수정 전 관련 스크립트, 파일 간 종속성, 프로젝트 설정(Input System, Render Pipeline 등) 확인.
 
@@ -191,5 +197,6 @@ supersedes: AGENTS.md(v8), AGENTS.md(v7), AGENTS.md(v6), AGENTS.md(v5), AGENTS.m
 | [agents-reference/ai-generation.md](agents-reference/ai-generation.md) | AI 생성 서비스로 에셋(이미지·스프라이트·메시·머티리얼·사운드 등)을 생성하거나 편집하는 작업. **에셋 생성의 기본 경로다** — 아래 `local-comfyui-stack.md` 조건에 해당하는 작업일 때만 제외한다 |
 | [agents-reference/animation-pose.md](agents-reference/animation-pose.md) | `GenerateHumanoidAnimation` 등으로 캐릭터의 동작(motion) 또는 정지 포즈(pose)를 생성하는 작업 |
 | [agents-reference/local-comfyui-stack.md](agents-reference/local-comfyui-stack.md) | **사용자가 "로컬"·"ComfyUI"로 하라고 명시한** 에셋·애니메이션 생성 작업이면서, **`H:\source\ComfyUI\CLAUDE.md` 파일이 존재하는 PC**일 때. 둘 중 하나라도 아니면 해당 없음이며 본문을 열지 않는다 — 명시가 없으면 자동으로 로컬로 보내지 않고 `ai-generation.md`(클라우드)를 쓴다 |
+| [agents-reference/scene-save-modal.md](agents-reference/scene-save-modal.md) | 씬 저장·전환, `run_tests`·플레이모드 진입, 열린 씬 수정, 모달 대화상자·리로드 타임아웃이 생긴 작업 |
 
 각 참고 문서는 이 문서(§1~4)의 행동 규칙 아래에서 적용되는 도메인 절차이며, 충돌 시 이 문서(§0~4)가 우선한다.
